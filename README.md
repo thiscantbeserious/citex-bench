@@ -176,7 +176,7 @@ citex-bench/
 ├── docs/                rationale and plans
 ├── reports/             result writeups and raw logs
 ├── results/             raw speed output
-├── agents/              verification subagents (.claude/agents and .pi/agents symlink here)
+├── .agents/             verification subagents (.claude and .pi symlink here)
 ├── AGENTS.md            shared agent instructions (CLAUDE.md symlinks here)
 ├── ARCHITECTURE.md      hard rules and stage contracts
 ├── FINDINGS.md          research writeup
