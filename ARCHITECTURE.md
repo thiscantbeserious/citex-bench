@@ -15,16 +15,27 @@ score "verified" on self-reference, even while it only measures extraction.
 
 ## The one hard rule (read this first)
 
-**A claim is never "verified" by the document it was extracted from.** The
-document the claim came from is, at best, a pointer to where to find a source.
-Verification only comes from independently fetching and checking an external
-source against the claim.
+**Same-document support is real but always lower-weight than external
+verification, and the top trust tier requires external sources.** A claim can
+be corroborated by its own document, when the document restates the fact
+multiple times and compares competing claims it found, picking the strongest.
+That is a valid signal. But it must always be weighted below a claim that also
+carries citations pointing to external sources (links, supplied documents)
+that were fetched and checked against the claim. No claim reaches the top trust
+tier on same-document support alone.
 
-This is the anti-hallucination invariant, and it is the reason the system is
-architected as separated stages rather than one LLM pass. An LLM can be fluent
-and confident while fabricating citations out of its own context, and the only
-defense is to check each claim against something the model did not generate
-and cannot see.
+This is the anti-hallucination invariant, restated as a weighting rule rather
+than a flat ban. A hallucination is usually a single confident assertion, not a
+fact restated coherently across a document with competing-claim comparison, so
+same-document corroboration has signal. But it is weaker than external
+verification, and the system must never let it stand in for external.
+
+The biggest danger of requiring external checks on every cited source is that
+you would theoretically have to fetch and verify them all. That work, fetching
+external sources and fact-checking them against claims, is handled by the
+harness (the coding-agent or pipeline hosting this benchmark), not embedded in
+this product. This repo provides extraction and the contract for the rest. It
+does not implement the external-fetch-and-check loop itself.
 
 ```
                  EXTRACT        RESOLVE MARKER        VERIFY EXTERNAL
@@ -93,10 +104,11 @@ Compute a `trust_score` per claim, 0..1, from the collected evidence.
 Calibrated like a deep-research pass, not a binary pass/fail.
 
 **Hard rules for trust scoring:**
-- **Same-document support is devalued.** A claim mentioned multiple times in the
- same document does get some credit (cross-reference within the doc is weak
- corroboration), but it is rated LOWER than a claim with independently fetched
- and verified sources.
+- **Same-document support is devalued.** A claim restated multiple times in the
+ same document, and compared there against competing claims it found, does get
+ credit as weak corroboration. But it is rated lower than a claim with
+ independently fetched and verified sources, and it can never on its own reach
+ the top tier.
 - **No full score without external sources.** A claim is NEVER assigned the top
  trust tier on same-document support alone, no matter how many times it recurs.
  The top tier requires at least one external source that was fetched and that
