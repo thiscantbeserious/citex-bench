@@ -5,8 +5,6 @@
 ![created with](https://img.shields.io/badge/created%20with-Claude%20Code-orange)
 ![created with](https://img.shields.io/badge/created%20with-pi.dev-green)
 
-<a href="https://huggingface.co/prism-ml"><img src="https://raw.githubusercontent.com/PrismML-Eng/Bonsai-demo/main/assets/bonsai-logo.svg" width="120" alt="PrismML"></a>
-
 A CPU-floor benchmark for **claim extraction with citation mapping** on small
 quantized language models. Measures both **speed** (can it finish under an
 interactive latency budget?) and **accuracy** (does it extract the right claims
@@ -71,12 +69,15 @@ For how/why the model tiers were chosen, read
 
 ---
 
-## The models
+## Tested models
 
-The PrismML Bonsai family: ternary (`{-1,0,+1}`, ~1.71 bits/weight) and 1-bit
-(`{-1,+1}`, ~1.125 bits/weight) representations of Qwen3.6-based models at four
-sizes. Run CPU-only via the PrismML llama.cpp fork (the `prism` branch carries
-the low-bit CPU kernels. stock upstream does not).
+<a href="https://huggingface.co/prism-ml"><img src="https://raw.githubusercontent.com/PrismML-Eng/Bonsai-demo/main/assets/bonsai-logo.svg" width="260" alt="PrismML Bonsai"></a>
+
+The current configured provider is **PrismML** (Bonsai): ternary
+(`{-1,0,+1}`, ~1.71 bits/weight) and 1-bit (`{-1,+1}`, ~1.125 bits/weight)
+representations of Qwen3.6-based models at four sizes, run CPU-only via the
+PrismML llama.cpp fork (the `prism` branch carries the low-bit CPU kernels,
+stock upstream does not).
 
 | tier | model | quant | deployed size |
 |---|---|---|---|
@@ -87,9 +88,10 @@ the low-bit CPU kernels. stock upstream does not).
 | `8b-1bit` | Bonsai-8B | Q1_0 | ~1.1 GB |
 | `27b-1bit` | Bonsai-27B | Q1_0 | ~3.6 GB |
 
-See [docs/model-selection.md](docs/model-selection.md) for the full rationale,
-the tier-resolution rules, and why 27B is in the speed bench but not the accuracy
-grid.
+Providers and tiers are configured in `bench.sh`'s `tier_spec()`. That is the
+single place to point at a different vendor or model family, the rest of the
+harness is provider-agnostic. See [docs/model-selection.md](docs/model-selection.md)
+for the rationale.
 
 ---
 
