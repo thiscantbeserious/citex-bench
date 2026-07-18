@@ -5,6 +5,16 @@
 ![created with](https://img.shields.io/badge/created%20with-Claude%20Code-orange)
 ![created with](https://img.shields.io/badge/created%20with-pi.dev-green)
 
+## Credits
+
+The current model and low-bit-kernel provider is **PrismML** (Bonsai). Thanks to
+PrismML for pushing for efficiency. Providers are swappable, see
+[CREDITS.md](CREDITS.md):
+
+<a href="https://huggingface.co/prism-ml"><img src="https://raw.githubusercontent.com/PrismML-Eng/Bonsai-demo/main/assets/bonsai-logo.svg" width="220" alt="PrismML Bonsai"></a>
+
+---
+
 A CPU-floor benchmark for **claim extraction with citation mapping** on small
 quantized language models. Measures both **speed** (can it finish under an
 interactive latency budget?) and **accuracy** (does it extract the right claims
@@ -70,8 +80,6 @@ For how/why the model tiers were chosen, read
 ---
 
 ## Tested models
-
-<a href="https://huggingface.co/prism-ml"><img src="https://raw.githubusercontent.com/PrismML-Eng/Bonsai-demo/main/assets/bonsai-logo.svg" width="260" alt="PrismML Bonsai"></a>
 
 The current configured provider is **PrismML** (Bonsai): ternary
 (`{-1,0,+1}`, ~1.71 bits/weight) and 1-bit (`{-1,+1}`, ~1.125 bits/weight)
