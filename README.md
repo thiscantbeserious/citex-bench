@@ -43,6 +43,29 @@ alternatives, and the honest limits of that research, read
 
 ---
 
+---
+
+## Background
+
+This benchmark comes out of work on verifying the credibility of research and
+writing that LLMs produce or scaffold. As more reports and prose are generated
+or assisted by large language models, the citations in that text stop being a
+guarantee and become a claim of their own: does this source actually say what
+the text says it does? citex-bench tests whether a small local model can be the
+first step in answering that, by extracting cited claims and mapping them to
+their sources so each can be checked rather than taken on trust.
+
+The deployment target is deliberately the CPU floor, any machine, not a GPU rig
+or a billed API. The intended host is a coding-agent harness (Claude Code,
+Codex, pi.dev, opencode, and similar), where a local verification step has to
+fit inside the agent loop's interactive latency budget. That constraint, not
+capability, is what drives the model choice: a large model would trivially do
+the extraction well, and trivially miss the budget.
+
+See [**FINDINGS.md**](FINDINGS.md) for the research basis.
+
+---
+
 ## The models
 
 The PrismML Bonsai family: ternary (`{-1,0,+1}`, ~1.71 bits/weight) and 1-bit
