@@ -50,7 +50,7 @@ See [**FINDINGS.md**](FINDINGS.md) for the research basis.
 
 What goes in and what should come out (from `eval/cases.jsonl`):
 
-**Document (in):** inline citation markers in the body text.
+**Document (in):** a short excerpt with inline citation markers in the body.
 
 > Germany's grid operators reported record renewable output last month.
 > According to a report from CleanEnergyWire [1], wind and solar covered 68%
@@ -61,20 +61,32 @@ What goes in and what should come out (from `eval/cases.jsonl`):
 > statement from the grid operator TenneT [2] confirmed that no blackouts
 > occurred despite the surge.
 
-**Expected extraction (out):** each cited factual claim mapped to its marker.
-The uncited analyst opinion is dropped.
+**Expected extraction (out):** one entry per cited factual claim, the uncited
+analyst opinion is dropped. In `direct` mode the model emits the `source_ref`
+itself:
 
 ```json
 [
-  {"source_ref": "[1]", "key_phrase": "68%"},
-  {"source_ref": "[1]", "key_phrase": "412 million"},
-  {"source_ref": "[2]", "key_phrase": "no blackouts"}
+  {"claim": "Wind and solar covered 68% of national electricity demand on April 14th", "source_ref": "[1]"},
+  {"claim": "Grid curtailment costs reached 412 million euros in the first quarter", "source_ref": "[1]"},
+  {"claim": "No blackouts occurred despite the surge in renewable output", "source_ref": "[2]"}
 ]
 ```
 
-In `direct` mode the model emits this JSON itself. In `quote` mode it emits
-`{claim, quote}` and a deterministic resolver recovers the marker from the
-document text (see [FINDINGS.md](FINDINGS.md)).
+In `quote` mode the model emits a verbatim `quote` instead of the marker, and a
+deterministic resolver locates it in the document and reads the nearest
+`[N]` (see [FINDINGS.md](FINDINGS.md)):
+
+```json
+[
+  {"claim": "Wind and solar covered 68% of national electricity demand on April 14th",
+   "quote": "wind and solar covered 68% of national electricity demand on April 14th, a new national record"},
+  {"claim": "Grid curtailment costs reached 412 million euros in the first quarter",
+   "quote": "grid curtailment costs reached 412 million euros in the first quarter"},
+  {"claim": "No blackouts occurred despite the surge in renewable output",
+   "quote": "no blackouts occurred despite the surge"}
+]
+```
 
 ### Known gaps (not yet handled)
 
