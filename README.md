@@ -8,8 +8,7 @@
 ## Credits
 
 The current model and low-bit-kernel provider is **PrismML** (Bonsai). Thanks to
-PrismML for pushing for efficiency. Providers are swappable, see
-[CREDITS.md](CREDITS.md):
+PrismML for pushing for efficiency. See [CREDITS.md](CREDITS.md):
 
 <a href="https://huggingface.co/prism-ml"><img src="https://raw.githubusercontent.com/PrismML-Eng/Bonsai-demo/main/assets/bonsai-logo.svg" width="220" alt="PrismML Bonsai"></a>
 
