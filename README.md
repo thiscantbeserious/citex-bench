@@ -68,27 +68,22 @@ grid.
 ## What's in the box
 
 ```
-Dockerfile CPU-only build of the PrismML llama.cpp fork (llama-bench + llama-completion)
-run.sh host wrapper: build image, run the speed benchmark
-bench.sh in-container: resolve/download models, run llama-bench, summarize
-summarize.py turn llama-bench rows into wall-clock seconds + bandwidth-model check
-membw.c STREAM-triad memory-bandwidth probe (decode's explanatory variable)
-eval.sh host wrapper: run the accuracy eval across tiers/modes/temps
-eval/
- eval.py runs cases via llama-completion, scores JSON/recall/citation-acc
- cases.jsonl 5 synthetic documents with expected {source_ref, key_phrase}
- verify.py deterministic re-verification of the scorer (pure-function check)
-docs/
- model-selection.md why these models/tiers
- eval-redesign-plan.md the multi-pass + full Cartesian redesign (planned, not built)
-reports/
- 00-results-2026-07-18.md the scout-run results writeup
- accuracy-arch-temp.log raw accuracy eval log
-results/
- raw-host.json / summary-host.txt llama-bench speed output
+citex-bench/
+├── Dockerfile           build definition for the CPU-only llama.cpp image
+├── run.sh / eval.sh     host wrappers for speed / accuracy
+├── bench.sh             in-container speed benchmark
+├── summarize.py         turns bench output into wall-clock seconds + bandwidth check
+├── membw.c              STREAM-triad memory-bandwidth probe
+├── eval/                accuracy harness, test cases, scorer self-check
+├── docs/                rationale and plans
+├── reports/             result writeups and raw logs
+├── results/             raw speed output
+├── FINDINGS.md          research writeup
+├── LICENSE              MIT (harness code)
+└── .gitignore
 ```
 
-Models cache to `./models/` (bind-mounted. survives rebuilds, gitignored).
+Models cache to `./models/` (bind-mounted, survives rebuilds, gitignored).
 
 ---
 
