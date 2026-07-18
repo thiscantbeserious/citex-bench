@@ -2,8 +2,8 @@
 
 ![created with](https://img.shields.io/badge/created%20with-GLM%205.2-blue)
 ![created with](https://img.shields.io/badge/created%20with-Ornith%201.0%2035B-purple)
-![harness](https://img.shields.io/badge/harness-Claude%20Code-orange)
-![harness](https://img.shields.io/badge/harness-pi.dev-green)
+![created with](https://img.shields.io/badge/created%20with-Claude%20Code-orange)
+![created with](https://img.shields.io/badge/created%20with-pi.dev-green)
 
 A CPU-floor benchmark for **claim extraction with citation mapping** on small
 quantized language models. Measures both **speed** (can it finish under an
