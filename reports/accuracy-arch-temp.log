@@ -1,0 +1,180 @@
+==> Building image (adds llama-cli + eval harness on top of run.sh's image)
+STEP 1/17: FROM debian:bookworm-slim
+STEP 2/17: ARG FORK_URL=https://github.com/PrismML-Eng/llama.cpp
+--> Using cache 7ee0d0f0c51291fa95d613415bef5b2be5b037b2a0e63d632195f94e4f5a8d9f
+--> 7ee0d0f0c512
+STEP 3/17: ARG FORK_REF=prism
+--> Using cache 960124c698626ed0493ff08b3802b7cdbe65f6381e716008513da4f651516b2f
+--> 960124c69862
+STEP 4/17: RUN apt-get update && apt-get install -y --no-install-recommends         build-essential cmake git curl ca-certificates         python3 python3-pip python3-venv libgomp1 procps     && rm -rf /var/lib/apt/lists/*
+--> Using cache 6017a64a709b1d5af62b2c0bf9f14ccab8c1993e7feb11cd64c452136ff91bfe
+--> 6017a64a709b
+STEP 5/17: RUN pip3 install --no-cache-dir --break-system-packages "huggingface_hub[cli]"
+--> Using cache 4a9a2625ecff474f134f7adcba36d5adc06a7c60a3c14b55df3edf0ccf231e77
+--> 4a9a2625ecff
+STEP 6/17: WORKDIR /opt
+--> Using cache 7c3e7da4ceb5ab0eae1644c443ccb8bcf9a74c8d8f311bfb1abb4da3235cf8bf
+--> 7c3e7da4ceb5
+STEP 7/17: RUN git clone --depth 1 --branch "${FORK_REF}" "${FORK_URL}" llama.cpp
+--> Using cache 816a2373a5d1d06253be81bc07a975091b9e3bbc81e09e076c50051f03b7e8da
+--> 816a2373a5d1
+STEP 8/17: RUN set -e;     for f in ggml/src/ggml-cpu/arch/x86/quants.c ggml/src/ggml-cpu/arch/arm/quants.c; do         if [ -f "llama.cpp/$f" ] && grep -qi 'q2_0' "llama.cpp/$f"; then             echo "OK: q2_0 CPU kernels present in $f"; found=1;         fi;     done;     if [ -z "${found:-}" ]; then         echo "FATAL: no q2_0 CPU kernels found on ref '${FORK_REF}'.";         echo "You are probably on upstream llama.cpp. Use FORK_REF=prism.";         exit 1;     fi
+--> Using cache e94793d89717911d851b78072c3aeb9fa49321c0ea628601f5a7ee221fe54b1e
+--> e94793d89717
+STEP 9/17: RUN set -e;     ARCH="$(uname -m)";     if [ "$ARCH" = "aarch64" ] || [ "$ARCH" = "arm64" ]; then         EXTRA_FLAGS="-DGGML_NATIVE=OFF -DCMAKE_C_FLAGS=-march=armv8.2-a+fp16+dotprod -DCMAKE_CXX_FLAGS=-march=armv8.2-a+fp16+dotprod";     else         EXTRA_FLAGS="-DGGML_NATIVE=ON";     fi;     cmake -S llama.cpp -B /opt/build         -DCMAKE_BUILD_TYPE=Release         $EXTRA_FLAGS         -DGGML_METAL=OFF         -DGGML_CUDA=OFF         -DGGML_VULKAN=OFF         -DGGML_BLAS=OFF         -DGGML_RPC=OFF         -DLLAMA_CURL=OFF         -DLLAMA_BUILD_TESTS=OFF         -DLLAMA_BUILD_EXAMPLES=OFF         -DLLAMA_BUILD_SERVER=OFF     && cmake --build /opt/build -j"$(nproc)" --target llama-bench llama-completion     && find /opt/build \( -name 'llama-bench' -o -name 'llama-completion' \) -type f -exec cp {} /usr/local/bin/ \;
+--> Using cache 0c10dcbbea1c3733c26a62f0e82917f789a456a280319b2f7d688a7088d2275b
+--> 0c10dcbbea1c
+STEP 10/17: RUN llama-bench --help >/dev/null 2>&1 || true
+--> Using cache e83f8a5d29858142898442af5a8f6bccde47ec25aaf0caebfb1292025f263113
+--> e83f8a5d2985
+STEP 11/17: COPY membw.c /opt/membw.c
+--> Using cache 79ec0a0fa9a86ed6cb2dd1b8dfedff00d4ed98b1c78d15c06fc024884f1391b9
+--> 79ec0a0fa9a8
+STEP 12/17: RUN gcc -O3 -fopenmp -o /usr/local/bin/membw /opt/membw.c
+--> Using cache 45a223432a6eb1cd51846875ad974a643ebb6d1298f85cc0db43841fd44df9e1
+--> 45a223432a6e
+STEP 13/17: COPY bench.sh summarize.py /opt/
+--> Using cache 7f9fc044e2398a26fa55e555fb13a97d9181b449d3f7cbe0195c976f2675bf5e
+--> 7f9fc044e239
+STEP 14/17: COPY eval /opt/eval
+--> f6ce9a39ccc0
+STEP 15/17: RUN chmod +x /opt/bench.sh
+--> 30124b0414de
+STEP 16/17: VOLUME ["/models", "/results"]
+--> 79520cabb5d7
+STEP 17/17: ENTRYPOINT ["/opt/bench.sh"]
+COMMIT bonsai-floor:prism
+--> ca3360fc1a56
+Successfully tagged localhost/bonsai-floor:prism
+ca3360fc1a56a9a55de4ac65daec2b8c4cd91c13073c985f316119fb5137d77b
+  (1.7b tier: applying presence-penalty=0.5 per model card)
+
+=== 1.7b-1bit  [direct]  temp=0.0 top-k=20 top-p=0.9 rep=1.0 presence=0.5 seed=0 ===
+  energy           json=True  recall=  0%  cite_acc=  0%  (0/3, 2.1s)
+  ai_inference     json=False recall=  0%  cite_acc= n/a  (0/3, 2.2s)
+  health           json=True  recall=  0%  cite_acc=  0%  (0/2, 62.7s)
+  no_citations     json=True  recall=  0%  cite_acc= n/a  (0/0, 3.3s)
+  battery_storage  json=True  recall=  0%  cite_acc=  0%  (0/3, 2.1s)
+
+=== 1.7b-1bit  [quote]  temp=0.0 top-k=20 top-p=0.9 rep=1.0 presence=0.5 seed=0 ===
+  energy           json=True  recall=100%  cite_acc=100%  (3/3, 7.4s)  quote_match=100%
+  ai_inference     json=False recall=  0%  cite_acc= n/a  (0/3, 4.0s)
+  health           json=False recall=  0%  cite_acc= n/a  (0/2, 9.6s)
+  no_citations     json=True  recall=  0%  cite_acc= n/a  (0/0, 4.5s)
+  battery_storage  json=False recall=  0%  cite_acc= n/a  (0/3, 10.0s)
+
+=== 1.7b-1bit  [direct]  temp=0.5 top-k=20 top-p=0.9 rep=1.0 presence=0.5 seed=0 ===
+  energy           json=False recall=  0%  cite_acc= n/a  (0/3, 5.0s)
+  ai_inference     json=False recall=  0%  cite_acc= n/a  (0/3, 2.2s)
+  health           json=False recall=  0%  cite_acc= n/a  (0/2, 2.3s)
+  no_citations     json=True  recall=  0%  cite_acc= n/a  (0/0, 1.9s)
+  battery_storage  json=True  recall=  0%  cite_acc=  0%  (0/3, 2.2s)
+
+=== 1.7b-1bit  [quote]  temp=0.5 top-k=20 top-p=0.9 rep=1.0 presence=0.5 seed=0 ===
+  energy           json=True  recall= 67%  cite_acc=100%  (2/3, 5.2s)  quote_match=100%
+  ai_inference     json=True  recall= 67%  cite_acc=100%  (2/3, 4.0s)  quote_match=100%
+  health           json=False recall=  0%  cite_acc= n/a  (0/2, 9.7s)
+  no_citations     json=False recall=  0%  cite_acc= n/a  (0/0, 9.4s)
+  battery_storage  json=False recall=  0%  cite_acc= n/a  (0/3, 5.8s)
+
+=== 1.7b-1bit  [direct]  temp=0.7 top-k=20 top-p=0.9 rep=1.0 presence=0.5 seed=0 ===
+  energy           json=False recall=  0%  cite_acc= n/a  (0/3, 5.1s)
+  ai_inference     json=False recall=  0%  cite_acc= n/a  (0/3, 2.4s)
+  health           json=False recall=  0%  cite_acc= n/a  (0/2, 2.2s)
+  no_citations     json=True  recall=  0%  cite_acc= n/a  (0/0, 2.0s)
+  battery_storage  json=False recall=  0%  cite_acc= n/a  (0/3, 2.7s)
+
+=== 1.7b-1bit  [quote]  temp=0.7 top-k=20 top-p=0.9 rep=1.0 presence=0.5 seed=0 ===
+  energy           json=False recall=  0%  cite_acc= n/a  (0/3, 8.0s)
+  ai_inference     json=True  recall= 67%  cite_acc=100%  (2/3, 4.0s)  quote_match=100%
+  health           json=True  recall= 50%  cite_acc=100%  (1/2, 3.1s)  quote_match=100%
+  no_citations     json=True  recall=  0%  cite_acc= n/a  (0/0, 4.2s)
+  battery_storage  json=False recall=  0%  cite_acc= n/a  (0/3, 11.1s)
+
+==========================================================================
+  1.7b-1bit — architecture x temperature
+==========================================================================
+  mode      temp  valid_json    recall   cite_acc  quote_hit   avg_s
+  ------------------------------------------------------------------
+  direct     0.0        80%        0%         0%          -   14.5s
+  quote      0.0        40%       20%       100%       100%    7.1s
+  direct     0.5        40%        0%         0%          -    2.7s
+  quote      0.5        40%       27%       100%       100%    6.8s
+  direct     0.7        20%        0%        n/a          -    2.9s
+  quote      0.7        60%       23%       100%       100%    6.1s
+  t=0.0: citation-accuracy delta (quote - direct) = +100 pts  -> quote WINS
+  t=0.5: citation-accuracy delta (quote - direct) = +100 pts  -> quote WINS
+
+=== 4b-1bit  [direct]  temp=0.0 top-k=20 top-p=0.9 rep=1.0 presence=0.0 seed=0 ===
+  energy           json=True  recall=100%  cite_acc=100%  (3/3, 6.7s)
+  ai_inference     json=True  recall=100%  cite_acc=100%  (3/3, 6.8s)
+  health           json=True  recall=100%  cite_acc=100%  (2/2, 6.0s)
+  no_citations     json=True  recall=100%  cite_acc= n/a  (0/0, 2.8s)
+  battery_storage  json=True  recall=100%  cite_acc=100%  (3/3, 8.3s)
+
+=== 4b-1bit  [quote]  temp=0.0 top-k=20 top-p=0.9 rep=1.0 presence=0.0 seed=0 ===
+  energy           json=True  recall=100%  cite_acc=100%  (3/3, 14.4s)  quote_match=100%
+  ai_inference     json=True  recall=100%  cite_acc=100%  (3/3, 13.3s)  quote_match=100%
+  health           json=True  recall=100%  cite_acc=100%  (2/2, 8.4s)  quote_match=100%
+  no_citations     json=True  recall=100%  cite_acc= n/a  (0/0, 2.8s)
+  battery_storage  json=True  recall=100%  cite_acc=100%  (3/3, 11.0s)  quote_match=100%
+
+=== 4b-1bit  [direct]  temp=0.5 top-k=20 top-p=0.9 rep=1.0 presence=0.0 seed=0 ===
+  energy           json=True  recall=100%  cite_acc=100%  (3/3, 10.2s)
+  ai_inference     json=True  recall=100%  cite_acc=100%  (3/3, 7.1s)
+  health           json=True  recall=100%  cite_acc=100%  (2/2, 5.8s)
+  no_citations     json=True  recall=100%  cite_acc= n/a  (0/0, 2.6s)
+  battery_storage  json=True  recall=100%  cite_acc=100%  (3/3, 7.0s)
+
+=== 4b-1bit  [quote]  temp=0.5 top-k=20 top-p=0.9 rep=1.0 presence=0.0 seed=0 ===
+  energy           json=True  recall=100%  cite_acc=  0%  (3/3, 9.2s)  quote_match=25%
+  ai_inference     json=True  recall=100%  cite_acc=100%  (3/3, 10.3s)  quote_match=100%
+  health           json=True  recall=100%  cite_acc=100%  (2/2, 8.1s)  quote_match=100%
+  no_citations     json=True  recall=100%  cite_acc= n/a  (0/0, 2.8s)
+  battery_storage  json=True  recall=100%  cite_acc=100%  (3/3, 10.5s)  quote_match=100%
+
+=== 4b-1bit  [direct]  temp=0.7 top-k=20 top-p=0.9 rep=1.0 presence=0.0 seed=0 ===
+  energy           json=True  recall=100%  cite_acc=100%  (3/3, 10.2s)
+  ai_inference     json=True  recall=100%  cite_acc=100%  (3/3, 7.1s)
+  health           json=True  recall=100%  cite_acc=100%  (2/2, 5.9s)
+  no_citations     json=True  recall=100%  cite_acc= n/a  (0/0, 2.6s)
+  battery_storage  json=True  recall=100%  cite_acc=100%  (3/3, 7.5s)
+
+=== 4b-1bit  [quote]  temp=0.7 top-k=20 top-p=0.9 rep=1.0 presence=0.0 seed=0 ===
+  energy           json=True  recall=100%  cite_acc=  0%  (3/3, 11.0s)  quote_match=25%
+  ai_inference     json=True  recall=100%  cite_acc=100%  (3/3, 11.5s)  quote_match=100%
+  health           json=True  recall=100%  cite_acc=100%  (2/2, 8.8s)  quote_match=100%
+  no_citations     json=True  recall=100%  cite_acc= n/a  (0/0, 2.9s)
+  battery_storage  json=True  recall= 67%  cite_acc=100%  (2/3, 10.7s)  quote_match=100%
+
+==========================================================================
+  4b-1bit — architecture x temperature
+==========================================================================
+  mode      temp  valid_json    recall   cite_acc  quote_hit   avg_s
+  ------------------------------------------------------------------
+  direct     0.0       100%      100%       100%          -    6.1s
+  quote      0.0       100%      100%       100%       100%   10.0s
+  direct     0.5       100%      100%       100%          -    6.5s
+  quote      0.5       100%      100%        75%        81%    8.2s
+  direct     0.7       100%      100%       100%          -    6.7s
+  quote      0.7       100%       93%        75%        81%    9.0s
+  t=0.0: citation-accuracy delta (quote - direct) = +0 pts  -> tie
+  t=0.5: citation-accuracy delta (quote - direct) = -25 pts  -> direct WINS
+  t=0.7: citation-accuracy delta (quote - direct) = -25 pts  -> direct WINS
+
+=== 8b-1bit  [direct]  temp=0.0 top-k=20 top-p=0.9 rep=1.0 presence=0.0 seed=0 ===
+  energy           json=False recall=  0%  cite_acc= n/a  (0/3, 45.8s)
+  ai_inference     json=False recall=  0%  cite_acc= n/a  (0/3, 35.6s)
+  health           json=False recall=  0%  cite_acc= n/a  (0/2, 35.3s)
+  no_citations     json=False recall=  0%  cite_acc= n/a  (0/0, 29.1s)
+  battery_storage  json=False recall=  0%  cite_acc= n/a  (0/3, 36.3s)
+
+=== 8b-1bit  [quote]  temp=0.0 top-k=20 top-p=0.9 rep=1.0 presence=0.0 seed=0 ===
+  energy           json=False recall=  0%  cite_acc= n/a  (0/3, 36.8s)
+  ai_inference     json=False recall=  0%  cite_acc= n/a  (0/3, 36.6s)
+  health           json=False recall=  0%  cite_acc= n/a  (0/2, 57.4s)
+  no_citations     json=False recall=  0%  cite_acc= n/a  (0/0, 37.0s)
+  battery_storage  json=False recall=  0%  cite_acc= n/a  (0/3, 36.5s)
+
+=== 8b-1bit  [direct]  temp=0.5 top-k=20 top-p=0.9 rep=1.0 presence=0.0 seed=0 ===
+  energy           json=False recall=  0%  cite_acc= n/a  (0/3, 36.9s)

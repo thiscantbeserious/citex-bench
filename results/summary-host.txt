@@ -1,0 +1,30 @@
+
+====================================================================================
+  MACHINE: host        measured memory bandwidth: 152.8 GB/s
+  WORKLOAD: 700-token document in  ->  300 tokens of claims out
+====================================================================================
+
+tier             size    PP700    TG300   prefill    decode     TOTAL   <30s
+----------------------------------------------------------------------------
+1.7b             0.4G     70.7     40.9      9.9s      7.3s     17.2s     OK
+1.7b-1bit        0.2G    207.8     47.7      3.4s      6.3s      9.7s     OK
+4b               1.0G     26.5     18.8     26.4s     16.0s     42.4s     NO
+4b-1bit          0.5G     83.5     21.8      8.4s     13.8s     22.2s     OK
+
+------------------------------------------------------------------------------------
+Bandwidth model check  (decode is bandwidth-bound: tok/s ~= GB/s / model_GB)
+tier             predicted    measured  efficiency
+--------------------------------------------------
+1.7b                348.5        40.9         12%
+1.7b-1bit           649.2        47.7          7%
+4b                  150.3        18.8         12%
+4b-1bit             278.9        21.8          8%
+
+If efficiency is ~50-80%, the bandwidth model holds and you can predict any
+machine from its GB/s alone. If it is far lower, this quant has no optimized
+CPU kernel on this architecture -- which is itself the finding.
+
+Reading this across machines: memory bandwidth is the explanatory variable for
+decode, core count and SIMD width for prefill. Record both per machine and the
+tiers stop being a mystery.
+
