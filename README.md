@@ -46,6 +46,54 @@ swappable runtime, not a fixed choice, nothing here depends on it.
 
 See [**FINDINGS.md**](FINDINGS.md) for the research basis.
 
+### Sample data
+
+What goes in and what should come out (from `eval/cases.jsonl`):
+
+**Document (in):** inline citation markers in the body text.
+
+> Germany's grid operators reported record renewable output last month.
+> According to a report from CleanEnergyWire [1], wind and solar covered 68%
+> of national electricity demand on April 14th, a new national record. The
+> report also notes that grid curtailment costs reached 412 million euros in
+> the first quarter [1]. Some analysts believe this trend will continue for
+> years, though such predictions are inherently speculative. A separate
+> statement from the grid operator TenneT [2] confirmed that no blackouts
+> occurred despite the surge.
+
+**Expected extraction (out):** each cited factual claim mapped to its marker.
+The uncited analyst opinion is dropped.
+
+```json
+[
+  {"source_ref": "[1]", "key_phrase": "68%"},
+  {"source_ref": "[1]", "key_phrase": "412 million"},
+  {"source_ref": "[2]", "key_phrase": "no blackouts"}
+]
+```
+
+In `direct` mode the model emits this JSON itself. In `quote` mode it emits
+`{claim, quote}` and a deterministic resolver recovers the marker from the
+document text (see [FINDINGS.md](FINDINGS.md)).
+
+### Known gaps (not yet handled)
+
+The bench's current sample is a single short excerpt with markers inline. Real
+documents differ in two ways that matter, and neither is handled yet:
+
+- **Chunking.** Longer documents exceed a small model's context window and must
+ be split into context chunks before extraction. The claim-to-marker mapping
+ then has to survive chunk boundaries (a claim may cite a marker introduced in
+ an earlier chunk). Nothing here chunks today.
+- **Footer references.** Real documents usually carry their sources in a
+ references section at the end (`[1] ...`, `[2] ...`), not as inline markers
+ alone. Resolving a marker to its actual source (URL, title, author) means
+ parsing that footer. The bench treats markers as opaque labels today and does
+ not resolve them to footer entries at all.
+
+Both are tracked as the next steps after the multi-pass refactoring, see
+[docs/eval-redesign-plan.md](docs/eval-redesign-plan.md).
+
 ---
 
 ## The intention

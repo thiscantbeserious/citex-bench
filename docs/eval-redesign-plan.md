@@ -69,3 +69,29 @@ This must land before 8B enters the multi-pass grid, or its cells are meaningles
 - Ternary tiers beyond the existing 1.7b/4b speed rows.
 - Real (non-synthetic) test cases, synthesize more first, or source a labeled set. tracked separately.
 - GPU/Vulkan backends, this is the CPU floor.
+
+## Next steps, after the multi-pass refactoring
+
+These are the two gaps called out in the README's Background that the
+single-pass scout does not address. Both should land after the multi-pass
+harness is stable, because each changes what a "case" is and would invalidate
+the single-pass numbers being held as the baseline.
+
+1. **Chunking.** A document that exceeds the model's context window must be
+ split into context chunks before extraction. Design questions to settle:
+ chunk size (token-budgeted, not char), overlap or not, and how a claim that
+ cites a marker first introduced in an earlier chunk is resolved when the
+ chunk fed to the model no longer contains that marker. Likely needs the
+ resolver (or a pre-pass) to carry marker context across chunks rather than
+ per-chunk.
+2. **Footer reference parsing.** Real documents carry their sources in a
+ references section at the end (`[1] Title. URL.`, `[2] ...`). Today the
+ harness treats markers as opaque labels. Resolving a marker to its actual
+ source means detecting the references section, parsing it, and mapping each
+ `[N]` marker to a `{title, url, ...}` entry. This is a deterministic pre/post
+ step, not a model step.
+
+Order them: footer parsing first (it is the smaller, fully deterministic
+addition and unblocks real-world cases), chunking second (it interacts with
+marker context and the resolver, and benefits from the multi-pass variance
+numbers to measure chunk-boundary regressions against).
