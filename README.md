@@ -1,4 +1,4 @@
-# citex-bench
+# citex-bench - research for fast LLM claim extraction & validation
 
 ![created with](https://img.shields.io/badge/created%20with-GLM%205.2-blue)
 ![created with](https://img.shields.io/badge/created%20with-Ornith%201.0%2035B-purple)
