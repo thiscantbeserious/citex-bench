@@ -5,6 +5,8 @@
 ![created with](https://img.shields.io/badge/created%20with-Claude%20Code-orange)
 ![created with](https://img.shields.io/badge/created%20with-pi.dev-green)
 
+<a href="https://huggingface.co/prism-ml"><img src="https://raw.githubusercontent.com/PrismML-Eng/Bonsai-demo/main/assets/bonsai-logo.svg" width="120" alt="PrismML"></a>
+
 A CPU-floor benchmark for **claim extraction with citation mapping** on small
 quantized language models. Measures both **speed** (can it finish under an
 interactive latency budget?) and **accuracy** (does it extract the right claims
