@@ -1,5 +1,10 @@
 # citex-bench
 
+![model](https://img.shields.io/badge/model-GLM%205.2-blue)
+![model](https://img.shields.io/badge/model-Ornith%201.0%2035B-purple)
+![harness](https://img.shields.io/badge/harness-Claude%20Code-orange)
+![harness](https://img.shields.io/badge/harness-pi.dev-green)
+
 A CPU-floor benchmark for **claim extraction with citation mapping** on small
 quantized language models. Measures both **speed** (can it finish under an
 interactive latency budget?) and **accuracy** (does it extract the right claims
@@ -10,38 +15,6 @@ Not a generic llama.cpp throughput benchmark. It exists to answer one question
 for a specific pipeline: **can a small ternary/1-bit model, running CPU-only with
 no GPU, extract cited claims fast enough and accurately enough to be the floor of
 a fact-checking tool?**
-
----
-
-## The intention
-
-Stage (1) of a document fact-checking pipeline: read a document, pull every
-factual claim that carries an inline citation marker (`[1]`, `[2]`), ignore
-uncited opinion, emit structured JSON `{claim, source_ref}`. Stages (2) and (3)
-- claim verification (MiniCheck) and domain credibility, are out of scope here.
-this bench measures stage (1) only.
-
-**Hard constraint:** CPU floor, interactive latency, **under 30s per ~1-2k
-token document.** That constraint is what makes model selection non-trivial: a
-large model would trivially do the extraction well, and trivially fail the
-budget.
-
-The bench compares two architectures for the extraction:
-
-- **direct**, the model emits `{claim, source_ref}` directly. The model does the
- localization. (What you'd reach for first.)
-- **quote**, the model emits `{claim, quote}` (a verbatim span from the
- document). a deterministic post-processor then locates the quote in the
- document and reads the nearest `[N]` marker. The model never sees a marker.
- This is what two independent 2026 preprints (FullCite, CAMS) converge on -
- see [FINDINGS.md](FINDINGS.md).
-
-For the full research basis, model-card numbers, the FullCite/CAMS finding, ruled-out
-alternatives, and the honest limits of that research, read
-[**FINDINGS.md**](FINDINGS.md). For how/why models were chosen, read
-[**docs/model-selection.md**](docs/model-selection.md).
-
----
 
 ---
 
@@ -56,13 +29,43 @@ first step in answering that, by extracting cited claims and mapping them to
 their sources so each can be checked rather than taken on trust.
 
 The deployment target is deliberately the CPU floor, any machine, not a GPU rig
-or a billed API. The intended host is a coding-agent harness (Claude Code,
-Codex, pi.dev, opencode, and similar), where a local verification step has to
-fit inside the agent loop's interactive latency budget. That constraint, not
-capability, is what drives the model choice: a large model would trivially do
-the extraction well, and trivially miss the budget.
+or a billed API. The intended host is a coding-agent harness (Claude Code at
+present, Codex, pi.dev, opencode, and similar), where a local verification step
+has to fit inside the agent loop's interactive latency budget. The harness is a
+swappable runtime, not a fixed choice, nothing here depends on it.
 
 See [**FINDINGS.md**](FINDINGS.md) for the research basis.
+
+---
+
+## The intention
+
+The verification pipeline has three stages. This bench measures stage (1) only,
+the others are named so the scope is explicit:
+
+1. **Claim extraction**, read a document, pull every factual claim that carries
+ an inline citation marker (`[1]`, `[2]`), ignore uncited opinion, emit
+ structured JSON `{claim, source_ref}`. *What this bench measures.*
+2. **Claim verification**, check each extracted claim against its cited source
+ for support. Out of scope here.
+3. **Domain credibility**, score sources for trustworthiness. Out of scope here.
+
+**Hard constraint:** CPU floor, interactive latency, **under 30s per ~1-2k
+token document.** A large model would trivially do the extraction well, and
+trivially fail the budget.
+
+The bench compares two architectures for the extraction:
+
+- **direct**, the model emits `{claim, source_ref}` directly. The model does the
+ localization. (What you'd reach for first.)
+- **quote**, the model emits `{claim, quote}` (a verbatim span from the
+ document). a deterministic post-processor then locates the quote in the
+ document and reads the nearest `[N]` marker. The model never sees a marker.
+ This is what two independent 2026 preprints (FullCite, CAMS) converge on -
+ see [FINDINGS.md](FINDINGS.md).
+
+For how/why the model tiers were chosen, read
+[**docs/model-selection.md**](docs/model-selection.md).
 
 ---
 
