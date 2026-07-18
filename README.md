@@ -150,34 +150,12 @@ RAM, or the larger tiers OOM or thrash.
 
 ---
 
-## The measured results (scout run)
+## Measured results
 
-Single-pass, directional only, see
-[reports/00-results-2026-07-18.md](reports/00-results-2026-07-18.md) for the full
-tables and [docs/eval-redesign-plan.md](docs/eval-redesign-plan.md) for why a
-multi-pass rebuild is planned.
-
-**Speed** (700-token doc in, 300 out, 7 threads, CPU only):
-
-| tier | size | total | <30s |
-|---|---|---|---|
-| 1.7b-1bit | 0.2G | 9.7s | OK |
-| 4b-1bit | 0.5G | 22.2s | OK |
-| 4b (ternary) | 1.0G | 42.4s | NO |
-
-**Accuracy** architecture comparison (1.7b-1bit):
-- **quote** beats **direct** on citation accuracy at every temperature (+100pts)
- , direct mode at 1.7B stops after one claim or misattributes.
-- At **4B**, direct mode is perfect and *faster*. quote mode degrades at temp>0.
-- **8B** emits a reasoning preamble before answering and never produces the JSON
- array, a prompting failure to fix before it's benchmarkable.
-
-The headline finding's important nuance: the research's "never let the model
-localize" conclusion was drawn at 8B-12B+ on *exact-span F1*, not *marker
-matching* (our metric, strictly easier). So at marker-matching on small docs, 4B
-direct genuinely works, even though it would likely still fail FullCite's
-exact-span test. The research and our measurement aren't contradicting. they
-measure different things.
+See [reports/](reports/) for dated result writeups and raw logs. The current
+entry is a single-pass scout run, directional only. A multi-pass rebuild with
+full parameter sweep is the planned next step in
+[docs/eval-redesign-plan.md](docs/eval-redesign-plan.md).
 
 ---
 
