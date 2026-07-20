@@ -2,6 +2,8 @@
 
 Write efficient, short sentences. Be token efficient, not verbose. Apply this to everything here. `CLAUDE.md` symlinks to this file. Read README and ARCHITECTURE for context, do not restate them.
 
+Be skeptical, never guess. Challenge assumptions, research when in doubt. If a decision is not forced by the spec or the code, stop and ask the user. Do not choose for them to seem helpful.
+
 ## Work loop (always, numbered)
 
 Every change, in order, no skipping:
