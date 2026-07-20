@@ -256,7 +256,59 @@ def self_test():
     assert "--json-schema" not in cmd_f, \
         "strict=False: --json-schema should be absent"
 
+    # ================================================================ Step 5
+    # Capture round-trip: build_record and capture_path produce valid JSONL
+    # that reads back with all required fields. 2 cases x 2 reps = 4 records.
+    tmpdir5 = tempfile.mkdtemp()
+    try:
+        capture_dir = os.path.join(tmpdir5, "captures")
+        model = "prism-ml/Bonsai-1.7B-gguf:Q1_0"
+        mode = "direct"
+        slug = "t0.5-tk20-tp0.9-rp1.0-pp0.5-s1"
+        cell_config = {
+            "temp": 0.5, "top_k": 20, "top_p": 0.9,
+            "repeat_penalty": 1.0, "presence_penalty": 0.5,
+            "strict_schema_validation": True, "template": "embedded",
+            "seed": 0, "threads": 7,
+        }
+        cases_5 = [
+            {"id": "c1", "text": "doc1 text", "expected": []},
+            {"id": "c2", "text": "doc2 text", "expected": []},
+        ]
+        cap = ev.capture_path(capture_dir, model, mode, slug)
+        assert cap.endswith(
+            "prism-ml-Bonsai-1.7B-gguf-Q1_0-direct-"
+            "t0.5-tk20-tp0.9-rp1.0-pp0.5-s1.jsonl"), \
+            f"capture_path: wrong filename, got {cap}"
+        os.makedirs(capture_dir, exist_ok=True)
+        with open(cap, "w") as f:
+            for rep in range(2):
+                for case in cases_5:
+                    rec = ev.build_record(model, mode, slug, cell_config, case,
+                                          rep, "raw_output_here",
+                                          {"valid_json": True}, 1.5, True)
+                    f.write(json.dumps(rec) + "\n")
+        records = [json.loads(l) for l in open(cap) if l.strip()]
+        assert len(records) == 4, \
+            f"expected 4 records, got {len(records)}"
+        required = {"model", "mode", "slug", "config", "case_id", "rep",
+                    "raw_output", "expected", "doc", "score", "seconds",
+                    "scored"}
+        for i, rec in enumerate(records):
+            assert required.issubset(rec.keys()), \
+                f"record {i} missing fields: {required - rec.keys()}"
+            assert "seed" in rec["config"], \
+                f"record {i} config missing seed"
+            assert "threads" in rec["config"], \
+                f"record {i} config missing threads"
+            assert rec["scored"] is True
+            assert rec["case_id"] in ("c1", "c2")
+            assert rec["rep"] in (0, 1)
+    finally:
+        shutil.rmtree(tmpdir5)
+
     print("self-test: scorer is deterministic, one-to-one assignment works")
+    print("self-test: capture round-trip writes and reads back all required fields")
     print("self-test: load_config validates, resolves, and assigns seeds correctly")
     print("self-test: strict_schema_validation wires --json-schema per mode")
     return True

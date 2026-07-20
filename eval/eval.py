@@ -337,6 +337,34 @@ def resolve_ref_from_quote(quote, doc, cutoff=0.85):
     return (markers[-1] if markers else None), True
 
 
+def capture_path(capture_dir, model, mode, slug):
+    """File path for the JSONL capture of one (model, mode, slug) group.
+    The model key (repo:quant) has / and : replaced by -."""
+    safe = model.replace("/", "-").replace(":", "-")
+    return os.path.join(capture_dir, f"{safe}-{mode}-{slug}.jsonl")
+
+
+def build_record(model, mode, slug, cell_config, case, rep, raw_output, score,
+                 seconds, scored):
+    """Construct one capture record dict. cell_config carries temp, top_k,
+    top_p, repeat_penalty, presence_penalty, strict_schema_validation,
+    template, seed, threads."""
+    return {
+        "model": model,
+        "mode": mode,
+        "slug": slug,
+        "config": dict(cell_config),
+        "case_id": case["id"],
+        "rep": rep,
+        "raw_output": raw_output,
+        "expected": case["expected"],
+        "doc": case["text"],
+        "score": score,
+        "seconds": seconds,
+        "scored": scored,
+    }
+
+
 def score_case(predicted, expected, mode, doc):
     base = {"valid_json": False, "recall": 0.0, "precision": 0.0,
             "citation_acc": None, "matched": 0, "expected_n": len(expected),
@@ -408,128 +436,95 @@ def score_case(predicted, expected, mode, doc):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--model", required=True)
-    ap.add_argument("--cases", default="/opt/eval/cases.jsonl")
-    ap.add_argument("--threads", default=str(os.cpu_count() or 4))
+    ap.add_argument("--config", default="eval/config.json",
+                   help="path to the config file")
+    ap.add_argument("--models-dir", default="models",
+                   help="directory to resolve model files from")
+    ap.add_argument("--cases", default="eval/cases.jsonl",
+                   help="the cases file")
+    ap.add_argument("--binary", default="llama-completion")
     ap.add_argument("--ctx", default="2048")
     ap.add_argument("--max-tokens", default="400")
-    ap.add_argument("--binary", default="llama-completion")
-    ap.add_argument("--tier", default="")
-    ap.add_argument("--timeout", type=int, default=600)
-    ap.add_argument("--mode", choices=["direct", "quote", "both"], default="both")
-    ap.add_argument("--temps", default="0",
-                   help="comma-separated temperatures to sweep (default 0 = greedy)")
-    # Bonsai model-card recommended sampling: temp 0.5 default (0.5-0.7), top-k 20
-    # (20-40), top-p 0.9 (0.85-0.95), repeat-penalty 1.0. The 1.7B needs a presence
-    # penalty (card flags it without a value). 0.5 is a modest nonzero default.
-    ap.add_argument("--top-k", type=float, default=20)
-    ap.add_argument("--top-p", type=float, default=0.9)
-    ap.add_argument("--repeat-penalty", type=float, default=1.0)
-    ap.add_argument("--presence-penalty", type=float, default=0.0)
-    ap.add_argument("--seed", type=int, default=0)
-    ap.add_argument("--template", default="",
-                   help="chat template: '' raw, 'embedded' use model's built-in "
-                        "template via --jinja, or a path to a jinja template file")
-    # Step 3 fallback: /no_think in the user message suppresses Qwen3 reasoning,
-    # applied identically to every tier alongside the embedded template.
-    ap.add_argument("--no-think", action="store_true",
-                   help="append /no_think to the prompt (Step 3 fallback)")
-    # Step 4: schema-validated JSON, default-on. BooleanOptionalAction gives
-    # --strict-schema-validation / --no-strict-schema-validation. In the smoke
-    # the user controls it via CLI. In the grid (Step 5) it comes from config.
-    ap.add_argument("--strict-schema-validation",
-                   action=argparse.BooleanOptionalAction, default=True,
-                   help="pass --json-schema to constrain output (default on)")
+    ap.add_argument("--timeout", type=int, default=None,
+                   help="override run.timeout from config")
+    ap.add_argument("--capture-dir", default="reports/captures",
+                   help="where to write JSONL capture files")
     args = ap.parse_args()
 
-    # The 1.7B card specifically calls for a presence penalty. Apply one unless the
-    # caller explicitly set --presence-penalty. Detect by tier, not model path, so
-    # the ternary 1.7B is covered too.
-    presence = args.presence_penalty
-    if presence == 0.0 and args.tier and "1.7b" in args.tier:
-        presence = 0.5
-        print(f"  (1.7b tier: applying presence-penalty={presence} per model card)", flush=True)
+    cfg = load_config(args.config, models_dir=args.models_dir)
+    cells = cfg["cells"]
+    threads = cfg["run"]["threads"]
+    timeout = args.timeout if args.timeout is not None else cfg["run"]["timeout"]
 
-    cases = [json.loads(l) for l in open(args.cases) if l.strip()]
-    modes = ["direct", "quote"] if args.mode == "both" else [args.mode]
-    temps = [float(x) for x in args.temps.split(",") if x.strip() != ""]
-    label = args.tier or args.model
-    summary = {}   # key: f"{mode}@t={temp}" -> metrics
+    with open(args.cases) as f:
+        cases = [json.loads(l) for l in f if l.strip()]
 
-    for temp in temps:
-        sample = {"temp": temp, "top_k": args.top_k, "top_p": args.top_p,
-                  "repeat_penalty": args.repeat_penalty,
-                  "presence_penalty": presence, "seed": args.seed}
-        for mode in modes:
-            template = PROMPT_QUOTE if mode == "quote" else PROMPT_DIRECT
-            print(f"\n=== {label}  [{mode}]  temp={temp} top-k={args.top_k} top-p={args.top_p} "
-                  f"rep={args.repeat_penalty} presence={presence} seed={args.seed} "
-                  f"template={args.template or 'raw'} no_think={args.no_think} "
-                  f"strict_schema={args.strict_schema_validation} ===", flush=True)
-            results = []
+    os.makedirs(args.capture_dir, exist_ok=True)
+
+    for cell in cells:
+        model_key = cell["model"]
+        resolved = cell["resolved_file"]
+        if resolved is None:
+            print(f"  {model_key}: no resolved model file, skipping", flush=True)
+            continue
+        model_path = os.path.join(args.models_dir, resolved)
+        mode = cell["mode"]
+        slug = cell["slug"]
+        rep = cell["rep"]
+        seed = cell["seed"]
+        s = cell["set"]
+        sample = dict(s)
+        sample["seed"] = seed
+        cell_config = {
+            "temp": s["temp"],
+            "top_k": s["top_k"],
+            "top_p": s["top_p"],
+            "repeat_penalty": s["repeat_penalty"],
+            "presence_penalty": s["presence_penalty"],
+            "strict_schema_validation": s["strict_schema_validation"],
+            "template": s["template"],
+            "seed": seed,
+            "threads": threads,
+        }
+        template = PROMPT_QUOTE if mode == "quote" else PROMPT_DIRECT
+        print(f"\n=== {model_key} [{mode}] {slug} rep={rep} ===", flush=True)
+        cap = capture_path(args.capture_dir, model_key, mode, slug)
+        with open(cap, "a") as cf:
             for case in cases:
                 t0 = time.time()
                 try:
                     prompt = template.format(doc=case["text"])
-                    # Qwen3 reads /no_think as a final user-turn line, so append
-                    # it after the "JSON:" cue to suppress reasoning preamble.
-                    if args.no_think:
-                        prompt = prompt + "\n/no_think"
-                    raw = run_model(args.binary, args.model,
-                                    prompt,
-                                    args.threads, args.ctx, args.max_tokens,
-                                    args.timeout, sample,
-                                    template=args.template,
-                                    strict_schema_validation=args.strict_schema_validation,
+                    raw = run_model(args.binary, model_path, prompt,
+                                    threads, args.ctx, args.max_tokens,
+                                    timeout, sample,
+                                    template=s["template"],
+                                    strict_schema_validation=s["strict_schema_validation"],
                                     mode=mode)
-                    s = score_case(extract_json_array(raw), case["expected"], mode, case["text"])
-                    dt = time.time() - t0
+                    score = score_case(extract_json_array(raw),
+                                       case["expected"], mode, case["text"])
+                    dt = round(time.time() - t0, 1)
+                    scored = True
                 except subprocess.TimeoutExpired:
-                    dt = args.timeout
-                    s = {"valid_json": False, "recall": 0.0, "precision": 0.0,
-                         "citation_acc": None,
-                         "matched": 0, "expected_n": len(case["expected"]),
-                         "quote_match": None, "f1": 0.0, "timed_out": True}
-                s["id"], s["seconds"] = case["id"], round(dt, 1)
-                results.append(s)
-                cite = f"{s['citation_acc']:.0%}" if s.get("citation_acc") is not None else " n/a"
-                qm = f"  quote_match={s['quote_match']:.0%}" if s.get("quote_match") is not None else ""
-                f1 = f"  f1={s['f1']:.0%}" if s['valid_json'] else ""
-                flag = "  TIMEOUT" if s.get("timed_out") else ""
-                print(f"  {s['id']:<16} json={str(s['valid_json']):<5} recall={s['recall']:>4.0%}  "
-                      f"precision={s['precision']:>4.0%}  cite_acc={cite:>4}  "
-                      f"({s['matched']}/{s['expected_n']}, {s['seconds']}s){qm}{f1}{flag}",
+                    dt = timeout
+                    raw = ""
+                    score = {"valid_json": False, "timed_out": True,
+                             "recall": 0.0, "precision": 0.0,
+                             "citation_acc": None, "matched": 0,
+                             "expected_n": len(case["expected"]),
+                             "quote_match": None, "f1": 0.0}
+                    scored = False
+                rec = build_record(model_key, mode, slug, cell_config, case,
+                                   rep, raw, score, dt, scored)
+                cf.write(json.dumps(rec) + "\n")
+                cf.flush()
+                cite = f"{score['citation_acc']:.0%}" if score.get("citation_acc") is not None else " n/a"
+                qm = f"  quote_match={score['quote_match']:.0%}" if score.get("quote_match") is not None else ""
+                f1 = f"  f1={score['f1']:.0%}" if score['valid_json'] else ""
+                flag = "  TIMEOUT" if not scored else ""
+                print(f"  {case['id']:<16} json={str(score['valid_json']):<5} recall={score['recall']:>4.0%}  "
+                      f"precision={score['precision']:>4.0%}  cite_acc={cite:>4}  "
+                      f"({score['matched']}/{score['expected_n']}, {dt}s){qm}{f1}{flag}",
                       flush=True)
-
-            n = len(results)
-            cites = [r["citation_acc"] for r in results if r["citation_acc"] is not None]
-            qms = [r["quote_match"] for r in results if r.get("quote_match") is not None]
-            summary[f"{mode}@t={temp}"] = {
-                "temp": temp, "mode": mode,
-                "json": sum(r["valid_json"] for r in results) / n,
-                "recall": sum(r["recall"] for r in results) / n,
-                "precision": sum(r["precision"] for r in results) / n,
-                "cite": (sum(cites) / len(cites)) if cites else None,
-                "quote": (sum(qms) / len(qms)) if qms else None,
-                "secs": sum(r["seconds"] for r in results) / n,
-            }
-
-    print(f"\n{'='*84}\n  {label} >> architecture x temperature\n{'='*84}")
-    print(f"  {'mode':<8}{'temp':>6}{'valid_json':>12}{'recall':>10}{'precision':>11}{'cite_acc':>11}{'quote_hit':>11}{'avg_s':>8}")
-    print("  " + "-" * 77)
-    for key, v in summary.items():
-        cite = f"{v['cite']:.0%}" if v["cite"] is not None else "n/a"
-        quote = f"{v['quote']:.0%}" if v["quote"] is not None else "-"
-        print(f"  {v['mode']:<8}{v['temp']:>6.1f}{v['json']:>12.0%}{v['recall']:>10.0%}{v['precision']:>11.0%}{cite:>11}{quote:>11}{v['secs']:>7.1f}s")
-
-    # Per temperature, direct-vs-quote delta (only when both modes ran at that temp).
-    for temp in temps:
-        d = summary.get(f"direct@t={temp}")
-        q = summary.get(f"quote@t={temp}")
-        if d and q and d["cite"] is not None and q["cite"] is not None:
-            delta = (q["cite"] - d["cite"]) * 100
-            verdict = "quote WINS" if delta > 0 else ("direct WINS" if delta < 0 else "tie")
-            print(f"  t={temp}: citation-accuracy delta (quote - direct) = {delta:+.0f} pts  -> {verdict}")
 
 
 if __name__ == "__main__":
