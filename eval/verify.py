@@ -17,7 +17,7 @@ Usage:
 A real implementation would record raw I/O during the eval. For now this is a
 skeleton asserting the scorer is deterministic: same raw output -> same score.
 """
-import json, os, sys, tempfile, shutil
+import json, os, subprocess, sys, tempfile, shutil
 sys.path.insert(0, os.path.dirname(__file__))
 import eval as ev  # noqa: E402
 
@@ -468,11 +468,94 @@ def self_test():
     finally:
         shutil.rmtree(tmpdir13)
 
+    # ================================================================ Step 7
+    # summarize.py: reads captures dir, emits the report.
+    # Test 14: summarize on a small fixtures capture dir. 2 JSONL files,
+    # each with 2 cases x 2 reps (4 records per file). Known scores. Run as
+    # subprocess, assert stdout contains the required sections, exit 0.
+    tmpdir14 = tempfile.mkdtemp()
+    try:
+        summarize_script = os.path.join(os.path.dirname(__file__), "summarize.py")
+
+        # File 1: greedy (temp 0.0), direct mode, 2 cases x 2 reps.
+        # raw_output identical across reps -> deterministic: yes.
+        cap14a = os.path.join(tmpdir14, "modelA-direct-t0.0-tk20-tp0.9-rp1.0-pp0.0-s1.jsonl")
+        cell_cfg_a = {"temp": 0.0, "top_k": 20, "top_p": 0.9,
+                      "repeat_penalty": 1.0, "presence_penalty": 0.0,
+                      "strict_schema_validation": True, "template": "",
+                      "seed": 0, "threads": 7}
+        raw_a = '[{"claim":"X","source_ref":"[1]"}]'
+        expected_a = [{"source_ref": "[1]", "key_phrase": "X"}]
+        doc_a = "Per a report [1], X happened."
+        score_a = ev.score_case(ev.extract_json_array(raw_a), expected_a,
+                                "direct", doc_a)
+        with open(cap14a, "w") as f:
+            for rep in range(2):
+                for cid in ("c1", "c2"):
+                    rec = ev.build_record("modelA", "direct",
+                                          "t0.0-tk20-tp0.9-rp1.0-pp0.0-s1",
+                                          cell_cfg_a,
+                                          {"id": cid, "text": doc_a,
+                                           "expected": expected_a},
+                                          rep, raw_a, score_a, 2.0, True)
+                    f.write(json.dumps(rec) + "\n")
+
+        # File 2: non-greedy (temp 0.5), quote mode, 2 cases x 2 reps.
+        cap14b = os.path.join(tmpdir14, "modelB-quote-t0.5-tk20-tp0.9-rp1.0-pp0.0-s1.jsonl")
+        cell_cfg_b = {"temp": 0.5, "top_k": 20, "top_p": 0.9,
+                      "repeat_penalty": 1.0, "presence_penalty": 0.0,
+                      "strict_schema_validation": True, "template": "",
+                      "seed": 0, "threads": 7}
+        raw_b = '[{"claim":"Y","quote":"Y happened"}]'
+        expected_b = [{"source_ref": "[1]", "key_phrase": "Y"}]
+        doc_b = "Per a report [1], Y happened."
+        score_b = ev.score_case(ev.extract_json_array(raw_b), expected_b,
+                                "quote", doc_b)
+        with open(cap14b, "w") as f:
+            for rep in range(2):
+                for cid in ("c1", "c2"):
+                    rec = ev.build_record("modelB", "quote",
+                                          "t0.5-tk20-tp0.9-rp1.0-pp0.0-s1",
+                                          cell_cfg_b,
+                                          {"id": cid, "text": doc_b,
+                                           "expected": expected_b},
+                                          rep, raw_b, score_b, 3.0, True)
+                    f.write(json.dumps(rec) + "\n")
+
+        result14 = subprocess.run(
+            [sys.executable, summarize_script, tmpdir14],
+            capture_output=True, text=True)
+        assert result14.returncode == 0, \
+            f"test 14: summarize exited {result14.returncode}, " \
+            f"stderr: {result14.stderr}"
+        out14 = result14.stdout.lower()
+        for keyword in ("precision", "recall", "within-case",
+                        "across-cases", "latency", "determinis"):
+            assert keyword in out14, \
+                f"test 14: output missing '{keyword}'"
+    finally:
+        shutil.rmtree(tmpdir14)
+
+    # Test 15: summarize on empty dir exits nonzero with a message.
+    tmpdir15 = tempfile.mkdtemp()
+    try:
+        summarize_script = os.path.join(os.path.dirname(__file__), "summarize.py")
+        result15 = subprocess.run(
+            [sys.executable, summarize_script, tmpdir15],
+            capture_output=True, text=True)
+        assert result15.returncode != 0, \
+            "test 15: summarize on empty dir should exit nonzero"
+        assert result15.stderr.strip() or result15.stdout.strip(), \
+            "test 15: summarize on empty dir should print a message"
+    finally:
+        shutil.rmtree(tmpdir15)
+
     print("self-test: scorer is deterministic, one-to-one assignment works")
     print("self-test: capture round-trip writes and reads back all required fields")
     print("self-test: load_config validates, resolves, and assigns seeds correctly")
     print("self-test: strict_schema_validation wires --json-schema per mode")
     print("self-test: replay verifies scores, names mismatches, checks timeouts")
+    print("self-test: summarize reports variance, latency, f1, determinism")
     return True
 
 
