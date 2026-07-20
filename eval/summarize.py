@@ -2,18 +2,19 @@
 """Summarize accuracy eval captures into a readable report.
 
 Reads JSONL capture files (one per model/mode/slug, written by eval.py) and
-computes:
+emits a compact report:
 
-  - Two-level variance: within-case (across reps) then across cases.
-    Level 1 measures within-case stability. Level 2 measures cross-case
-    difficulty. Reported separately, per the plan.
-  - Per-case latency: mean seconds per case_id, answering the scout's
-    one-slow-case puzzle.
-  - Precision and recall as primary metrics. F1 is reported but labeled
-    non-decision-grade, no conclusion drawn from it alone.
-  - Determinism side section: for greedy (temp 0) sets, checks whether reps
-    reproduce identical raw_output. Identical recorded config with divergence
-    is a finding.
+  1. One summary table: one row per (model, mode, slug) with the decision-grade
+     metrics (recall, precision, citation accuracy), mean latency, mean decode
+     TPS, rep count, and across-case std (stability). Scannable in one screen.
+  2. A determinism section: for greedy (temp 0) sets, whether reps reproduce
+     identical raw_output. Identical recorded config with divergence is a
+     finding.
+  3. An appendix: per-case detail (within-case variance across reps, per-case
+     latency, per-case TPS) for readers who need the breakdown.
+
+Precision and recall are primary (fabrication is the failure class). F1 is a
+labeled non-decision-grade convenience, reported in the appendix only.
 
 Mirrors the speed bench's root-level summarize.py: decoupled from the runner
 over the capture format. The runner writes captures, this reads them.
@@ -26,7 +27,10 @@ from collections import defaultdict
 
 
 def load_records(captures_dir):
-    """Load all .jsonl records from captures_dir. Returns a list of dicts."""
+    """Load all .jsonl records from captures_dir. Returns a list of dicts, or
+    None on error (missing dir, unreadable file, malformed JSON)."""
+    if not os.path.isdir(captures_dir):
+        return None
     files = sorted(glob.glob(os.path.join(captures_dir, "*.jsonl")))
     records = []
     for fpath in files:
@@ -54,6 +58,17 @@ def _std(values):
     return statistics.stdev(values)
 
 
+def _short_model(model_key):
+    """prism-ml/Bonsai-8B-gguf:Q1_0 -> 8B. Compact for the summary table."""
+    base = model_key.rsplit("/", 1)[-1]
+    base = base.replace("-gguf", "").replace("-Bonsai", "Bonsai")
+    # Pull the size token (1.7B, 4B, 8B, 27B) out of the basename.
+    for tok in ("1.7B", "4B", "8B", "27B"):
+        if tok in base:
+            return tok
+    return base
+
+
 def is_greedy(record):
     """A greedy set: slug starts with t0.0- or config temp == 0.0."""
     if record.get("slug", "").startswith("t0.0-"):
@@ -62,12 +77,20 @@ def is_greedy(record):
     return cfg.get("temp") == 0.0
 
 
+def _fmt_pct(x):
+    """Format a 0..1 fraction as a percentage, or 'n/a' for None."""
+    return f"{x*100:.0f}%" if x is not None else "n/a"
+
+
 def summarize(captures_dir):
     """Read captures and print the report. Returns 0 on success, 1 on error."""
     records = load_records(captures_dir)
-    if not records:
+    if records is None:
         print(f"summarize: no captures found in {captures_dir}",
               file=sys.stderr)
+        return 1
+    if not records:
+        print(f"summarize: no records in {captures_dir}", file=sys.stderr)
         return 1
 
     # Group records by (model, mode, slug).
@@ -76,96 +99,104 @@ def summarize(captures_dir):
         key = (r["model"], r["mode"], r["slug"])
         groups[key].append(r)
 
-    print(f"\n{'='*84}")
+    print(f"\n{'='*92}")
     print(f"  ACCURACY EVAL SUMMARY")
     print(f"  captures: {captures_dir}")
     print(f"  records: {len(records)}, groups: {len(groups)}")
-    print(f"{'='*84}")
+    print(f"  metrics: recall and precision primary (fabrication is the failure class), F1 non-decision-grade")
+    print(f"{'='*92}")
 
-    has_greedy = False
+    # ---- Summary table: one row per (model, mode, slug) ----
+    header = (f"  {'model':<6}{'mode':<8}{'slug':<40}"
+              f"{'recall':>8}{'prec':>8}{'cite':>8}"
+              f"{'latency':>9}{'tps':>9}{'reps':>6}{'std':>7}")
+    print(header)
+    print(f"  {'-'*88}")
+
+    greedy_groups = []  # (model, mode, slug, by_case) for the determinism section
+    appendix_rows = []  # per-case detail rows for the appendix
 
     for (model, mode, slug) in sorted(groups):
         recs = groups[(model, mode, slug)]
-        print(f"\n--- {model} / {mode} / {slug} ---")
-
-        # Group by case_id within this group, sort reps.
         by_case = defaultdict(list)
         for r in recs:
             by_case[r["case_id"]].append(r)
         for cid in by_case:
             by_case[cid].sort(key=lambda r: r["rep"])
 
-        # --- Level 1: within-case stability (across reps) ---
-        print(f"\n  LEVEL 1: within-case stability (mean and std across reps)")
-        hdr1 = (f"  {'case_id':<16}{'recall_mean':>12}{'recall_std':>12}"
-                f"{'precision_mean':>16}{'precision_std':>16}")
-        print(hdr1)
-        print(f"  {'-'*70}")
-        case_recall_means = []
-        case_precision_means = []
-        case_latency = {}
+        # Per-case means, then aggregate across cases.
+        case_recalls, case_precisions, case_latencies, case_tps = [], [], [], []
         for cid in sorted(by_case):
             reps = by_case[cid]
             recalls = [r["score"].get("recall", 0.0) for r in reps]
             precisions = [r["score"].get("precision", 0.0) for r in reps]
-            r_mean = _mean(recalls)
-            r_std = _std(recalls)
-            p_mean = _mean(precisions)
-            p_std = _std(precisions)
-            case_recall_means.append(r_mean)
-            case_precision_means.append(p_mean)
             secs = [r.get("seconds", 0.0) for r in reps]
-            case_latency[cid] = _mean(secs)
-            print(f"  {cid:<16}{r_mean:>12.2f}{r_std:>12.2f}"
-                  f"{p_mean:>16.2f}{p_std:>16.2f}")
+            tps_vals = [r.get("timing", {}).get("decode_tps")
+                        for r in reps if r.get("timing", {}).get("decode_tps") is not None]
+            case_recalls.append(_mean(recalls))
+            case_precisions.append(_mean(precisions))
+            case_latencies.append(_mean(secs))
+            case_tps.append(_mean(tps_vals) if tps_vals else 0.0)
+            appendix_rows.append((model, mode, slug, cid, reps,
+                                  _mean(recalls), _std(recalls),
+                                  _mean(precisions), _std(precisions),
+                                  _mean(secs), _mean(tps_vals) if tps_vals else None,
+                                  len(reps)))
 
-        # --- Level 2: across-cases difficulty ---
-        print(f"\n  LEVEL 2: across-cases difficulty (mean and std of per-case means)")
-        hdr2 = (f"  {'recall_mean':>12}{'recall_std':>12}"
-                f"{'precision_mean':>16}{'precision_std':>16}")
-        print(hdr2)
-        print(f"  {'-'*56}")
-        r2_mean = _mean(case_recall_means)
-        r2_std = _std(case_recall_means)
-        p2_mean = _mean(case_precision_means)
-        p2_std = _std(case_precision_means)
-        print(f"  {r2_mean:>12.2f}{r2_std:>12.2f}"
-              f"{p2_mean:>16.2f}{p2_std:>16.2f}")
+        recall_mean = _mean(case_recalls)
+        precision_mean = _mean(case_precisions)
+        # Citation accuracy: mean over records that have a non-None cite_acc.
+        cites = [r["score"].get("citation_acc") for r in recs
+                 if r["score"].get("citation_acc") is not None]
+        cite_mean = _mean(cites) if cites else None
+        latency_mean = _mean(case_latencies)
+        tps_mean = _mean(case_tps) if case_tps else 0.0
+        reps_count = len(recs) // len(by_case) if by_case else 0
+        # Across-case std of recall (stability signal).
+        recall_std = _std(case_recalls)
 
-        # --- F1 (non-decision-grade) ---
-        f1s = []
-        for cid in sorted(by_case):
-            for r in by_case[cid]:
-                f1s.append(r["score"].get("f1", 0.0))
-        print(f"\n  F1 (non-decision-grade): mean={_mean(f1s):.2f}")
+        print(f"  {_short_model(model):<6}{mode:<8}{slug:<40}"
+              f"{recall_mean:>7.2f}{precision_mean:>8.2f}{_fmt_pct(cite_mean):>8}"
+              f"{latency_mean:>7.1f}s{tps_mean:>8.1f}{reps_count:>6}{recall_std:>7.2f}")
 
-        # --- Per-case latency ---
-        print(f"\n  PER-CASE LATENCY (mean seconds across reps):")
-        hdr3 = f"  {'case_id':<16}{'mean_seconds':>14}"
-        print(hdr3)
-        print(f"  {'-'*30}")
-        for cid in sorted(by_case):
-            print(f"  {cid:<16}{case_latency[cid]:>14.1f}")
-
-        # --- Determinism (greedy sets only) ---
         if is_greedy(recs[0]):
-            has_greedy = True
-            print(f"\n  DETERMINISM (greedy / temp 0):")
-            hdr4 = f"  {'case_id':<16}{'deterministic':>14}"
-            print(hdr4)
-            print(f"  {'-'*30}")
+            greedy_groups.append((model, mode, slug, by_case))
+
+    # ---- Determinism section ----
+    print(f"\n  DETERMINISM (greedy / temp 0 sets)")
+    if not greedy_groups:
+        print(f"  no greedy sets found, skipping.")
+    else:
+        divergences = 0
+        total = 0
+        for (model, mode, slug, by_case) in greedy_groups:
             for cid in sorted(by_case):
                 reps = by_case[cid]
                 outputs = [r.get("raw_output", "") for r in reps]
-                det = len(set(outputs)) == 1
-                label = "yes" if det else "NO"
-                print(f"  {cid:<16}{label:>14}")
-                if not det:
-                    print(f"    diverging cell: {model} / {mode} / "
-                          f"{slug} / {cid}")
+                total += 1
+                if len(set(outputs)) != 1:
+                    divergences += 1
+                    print(f"  NO  {_short_model(model)} {mode} {slug} {cid}: "
+                          f"reps diverge")
+        if divergences == 0:
+            print(f"  all {total} greedy cells deterministic across reps "
+                  f"({len(greedy_groups)} sets). 0 divergences.")
+        else:
+            print(f"  {divergences}/{total} greedy cells diverged. "
+                  f"Identical config with divergence is a finding.")
 
-    if not has_greedy:
-        print(f"\n  DETERMINISM: no greedy (temp 0) sets found, skipping.")
+    # ---- Appendix: per-case detail ----
+    print(f"\n  APPENDIX: per-case detail (within-case variance across reps)")
+    print(f"  {'model':<6}{'mode':<8}{'slug':<34}{'case':<16}"
+          f"{'rec':>6}{'rec_std':>9}{'prec':>6}{'prec_std':>10}"
+          f"{'lat':>6}{'tps':>7}{'reps':>5}")
+    print(f"  {'-'*100}")
+    for (model, mode, slug, cid, reps, r_mean, r_std, p_mean, p_std,
+         lat, tps, n) in appendix_rows:
+        tps_s = f"{tps:.1f}" if tps is not None else "-"
+        print(f"  {_short_model(model):<6}{mode:<8}{slug:<34}{cid:<16}"
+              f"{r_mean:>5.2f}{r_std:>9.2f}{p_mean:>5.2f}{p_std:>10.2f}"
+              f"{lat:>5.1f}s{tps_s:>7}{n:>5}")
 
     print()
     return 0

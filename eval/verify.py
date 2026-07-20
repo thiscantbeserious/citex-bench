@@ -628,8 +628,9 @@ def self_test():
             f"test 14: summarize exited {result14.returncode}, " \
             f"stderr: {result14.stderr}"
         out14 = result14.stdout.lower()
-        for keyword in ("precision", "recall", "within-case",
-                        "across-cases", "latency", "determinis"):
+        # Summary table columns + sections that must appear.
+        for keyword in ("recall", "prec", "cite", "latency", "tps",
+                        "determinis", "appendix"):
             assert keyword in out14, \
                 f"test 14: output missing '{keyword}'"
     finally:
