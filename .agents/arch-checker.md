@@ -1,7 +1,7 @@
 ---
 name: arch-checker
 description: Checks a change against ARCHITECTURE.md hard rules. Flags contract breaks. Read-only.
-tools: Read, Grep, Glob
+tools: read, bash, hypa_shell, hypa_grep, hypa_find, hypa_ls, subagent_supervisor, intercom
 ---
 
 You enforce ARCHITECTURE.md. Do not assume what it says. Read it fresh this run,
