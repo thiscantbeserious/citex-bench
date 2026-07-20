@@ -286,6 +286,63 @@ def self_test():
         finally:
             shutil.rmtree(tmpdir)
 
+        # 7b. Regression: multiple same-quant different-size files must resolve
+        #     to the RIGHT size, not the first alphabetically. The first grid
+        #     run (commit d8ef19f) silently loaded Bonsai-1.7B-Q1_0.gguf for
+        #     every model key because the resolver matched on quant alone. This
+        #     test fails against the old resolver: all three resolve to 1.7B.
+        tmpdir2 = tempfile.mkdtemp()
+        try:
+            for name in ("Bonsai-1.7B-Q1_0.gguf", "Bonsai-4B-Q1_0.gguf",
+                         "Bonsai-8B-Q1_0.gguf"):
+                open(os.path.join(tmpdir2, name), "w").close()
+            rc2 = ev.load_config(config_path, models_dir=tmpdir2)
+            for cell in rc2["cells"]:
+                if cell["rep"] != 0 or cell["mode"] != "direct":
+                    continue
+                model = cell["model"]
+                got = cell["resolved_file"]
+                if "1.7B" in model:
+                    expected = "Bonsai-1.7B-Q1_0.gguf"
+                elif "4B" in model:
+                    expected = "Bonsai-4B-Q1_0.gguf"
+                elif "8B" in model:
+                    expected = "Bonsai-8B-Q1_0.gguf"
+                else:
+                    continue
+                assert got == expected, \
+                    f"{model}: expected {expected}, got {got} (cross-size collision bug)"
+        finally:
+            shutil.rmtree(tmpdir2)
+
+        # 7c. HF API primary path: mock _list_repo_ggufs to return a scoped
+        #     file list (one repo's files) and confirm _pick_gguf selects the
+        #     right quant with exclusion and packing preference. This tests the
+        #     path that runs when online, where the scoped list makes cross-size
+        #     collisions impossible.
+        from unittest.mock import patch
+        hf_files = [
+            "Bonsai-1.7B-Q1_0.gguf",
+            "Bonsai-1.7B-Q1_0_K.gguf",       # wrong quant variant
+            "Bonsai-1.7B-F16.gguf",           # excluded variant
+            "Bonsai-1.7B-mmproj.gguf",       # excluded variant
+            "Bonsai-1.7B-Q2_0.gguf",         # different quant
+            "Bonsai-1.7B-Q2_0_g64.gguf",    # g64 pack (fallback)
+        ]
+        with patch.object(ev, "_list_repo_ggufs", return_value=hf_files):
+            assert ev._resolve_model_file(None, "prism-ml/Bonsai-1.7B-gguf", "Q1_0") == "Bonsai-1.7B-Q1_0.gguf", \
+                "HF path: Q1_0 should pick Bonsai-1.7B-Q1_0.gguf"
+            assert ev._resolve_model_file(None, "prism-ml/Bonsai-1.7B-gguf", "Q2_0") == "Bonsai-1.7B-Q2_0.gguf", \
+                "HF path: Q2_0 should prefer g128 (no _g64 suffix)"
+            # g64 fallback: only the _g64 file present for this quant.
+            with patch.object(ev, "_list_repo_ggufs", return_value=["Bonsai-1.7B-Q2_0_g64.gguf"]):
+                assert ev._resolve_model_file(None, "prism-ml/Bonsai-1.7B-gguf", "Q2_0") == "Bonsai-1.7B-Q2_0_g64.gguf", \
+                    "HF path: should fall back to _g64 when no native pack"
+            # No match.
+            with patch.object(ev, "_list_repo_ggufs", return_value=["Bonsai-1.7B-F16.gguf"]):
+                assert ev._resolve_model_file(None, "prism-ml/Bonsai-1.7B-gguf", "Q1_0") is None, \
+                    "HF path: excluded-only files should return None"
+
         # 8. Per-set template override (Step 3 per-tier decision). The real
         #    config has defaults.template="embedded". 1.7B and 8B sets inherit
         #    it. 4B sets override to "" (raw) because the embedded template

@@ -18,7 +18,7 @@ Open question this measures (research called it the highest-value unknown):
 those results are all from 8B-12B+ models. Whether a 1.7B ternary/1-bit model
 emits quotes verbatim enough for the matching to land is untested.
 """
-import argparse, difflib, json, os, re, subprocess, sys, time
+import argparse, difflib, json, os, re, subprocess, sys, time, urllib.request, urllib.error
 
 MARKER_RE = re.compile(r"\[\d+\]")
 
@@ -56,15 +56,98 @@ _SAMPLABLE_KEYS = ["repeat_penalty", "top_k", "top_p",
                    "presence_penalty", "strict_schema_validation", "template"]
 
 
-def _resolve_model_file(models_dir, quant):
-    """Pick the GGUF filename matching `quant` from `models_dir`, applying the
-    same exclusion and packing preference as bench.sh's case statement: exclude
-    any candidate whose filename contains mmproj, spark, drafter, f16, bf16, or
-    PQ2_0 (case-insensitive), then prefer g128 (native, no _g64 suffix) over
-    g64. Returns the filename string, or None when models_dir is None or no
-    file matches."""
+# Packing suffix after the quant: _g64, _g128, etc. Digits only, per the
+# llama.cpp/PrismML naming convention.
+_PACK_SUFFIX_RE = re.compile(r"_g\d+$", re.IGNORECASE)
+
+_HF_API_TIMEOUT = 10  # seconds, don't hang the grid if HF is slow or offline
+
+
+def _list_repo_ggufs(repo):
+    """Fetch the list of .gguf filenames from the HuggingFace API for `repo`.
+    Mirrors bench.sh's list_ggufs(). Returns a list of filenames, or None on
+    network/parse error (offline, rate-limited, repo not found)."""
+    url = f"https://huggingface.co/api/models/{repo}"
+    try:
+        with urllib.request.urlopen(url, timeout=_HF_API_TIMEOUT) as r:
+            data = json.loads(r.read().decode("utf-8"))
+    except (urllib.error.URLError, OSError, ValueError):
+        return None
+    return [s["rfilename"] for s in data.get("siblings", [])
+            if s.get("rfilename", "").endswith(".gguf")]
+
+
+def _is_excluded_variant(filename_lower):
+    """True for non-loadable variant files: mmproj, Dspark/Drafter, F16/BF16,
+    PQ2_0. Matches bench.sh's exclusion case statement."""
+    return ("mmproj" in filename_lower or "spark" in filename_lower
+            or "drafter" in filename_lower or "f16" in filename_lower
+            or "bf16" in filename_lower or "pq2_0" in filename_lower)
+
+
+def _pick_gguf(filenames, quant):
+    """Pick the GGUF matching `quant` from a list of filenames, applying
+    bench.sh's exclusion and packing preference. The list is assumed to be
+    scoped to one repo (so no cross-size collision is possible). Returns the
+    filename, or None."""
+    quant_l = quant.lower()
+    cands = []
+    for f in filenames:
+        lf = f.lower()
+        if quant_l not in lf:
+            continue
+        if _is_excluded_variant(lf):
+            continue
+        cands.append(f)
+    if not cands:
+        return None
+    # Prefer g128 (native pack): the file WITHOUT _g64. Fall back to _g64.
+    for f in cands:
+        if "_g64" not in f.lower():
+            return f
+    return cands[0]
+
+
+def _tail_matches_quant(tail, quant_l):
+    """True if `tail` (the filename segment between the model-name prefix and
+    .gguf, lowercased) is exactly the quant, or the quant plus a packing suffix
+    like _g64 / _g128. Strict, not a substring: q1_0 matches "q1_0" and
+    "q1_0_g64" but NOT "q1_0-f16" or "q1_0-instruct"."""
+    if tail == quant_l:
+        return True
+    if not tail.startswith(quant_l + "_g"):
+        return False
+    return bool(_PACK_SUFFIX_RE.search(tail))
+
+
+def _resolve_model_file(models_dir, repo, quant):
+    """Pick the GGUF for `repo` + `quant`.
+
+    Primary: fetch the repo's file list from the HuggingFace API. The list is
+    scoped to one repo, so Bonsai-1.7B and Bonsai-8B (different repos) cannot
+    collide. This is exactly how bench.sh resolves, and it needs no model-name
+    matching. The first grid run (commit d8ef19f) loaded the 1.7B for every
+    model key because the loader scanned the local models/ dir (all sizes
+    mixed) and matched on quant alone.
+
+    Fallback (offline or API failure): scan the local models_dir with a strict
+    model-name prefix + quant-tail match. The prefix (repo basename with -gguf
+    stripped, lowercased) rejects cross-size collisions; the strict tail rejects
+    variant files (mmproj, F16, etc.) without a separate exclusion list.
+
+    Returns the filename, or None when no match."""
+    files = _list_repo_ggufs(repo)
+    if files:
+        pick = _pick_gguf(files, quant)
+        if pick:
+            return pick
     if not models_dir or not os.path.isdir(models_dir):
         return None
+    model_name = repo.rsplit("/", 1)[-1].lower()
+    if model_name.endswith("-gguf"):
+        model_name = model_name[:-len("-gguf")]
+    prefix = model_name + "-"
+    quant_l = quant.lower()
     try:
         entries = sorted(os.listdir(models_dir))
     except OSError:
@@ -73,18 +156,17 @@ def _resolve_model_file(models_dir, quant):
     for f in entries:
         if not f.endswith(".gguf"):
             continue
-        if quant not in f:
-            continue
         lf = f.lower()
-        if "mmproj" in lf or "spark" in lf or "drafter" in lf \
-                or "f16" in lf or "bf16" in lf or "pq2_0" in lf:
+        if not lf.startswith(prefix):
+            continue
+        tail = lf[len(prefix):-len(".gguf")]
+        if not _tail_matches_quant(tail, quant_l):
             continue
         cands.append(f)
     if not cands:
         return None
-    # Prefer g128 (native pack): the file WITHOUT _g64. Fall back to _g64.
     for f in cands:
-        if "_g64" not in f:
+        if "_g64" not in f.lower():
             return f
     return cands[0]
 
@@ -161,7 +243,7 @@ def load_config(path, models_dir=None):
             raise ValueError(f"model key missing ':quant' suffix: {model_key}")
         repo = model_key[:idx]
         quant = model_key[idx + 1:]
-        resolved_file = _resolve_model_file(models_dir, quant)
+        resolved_file = _resolve_model_file(models_dir, repo, quant)
 
         seen_slugs = set()
         for s in sets:
