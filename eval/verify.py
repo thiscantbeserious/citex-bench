@@ -68,6 +68,94 @@ def _expect_value_error(fn, name=None):
     raise AssertionError("expected ValueError, none raised")
 
 
+def replay(captures_dir):
+    """Deterministic replay: re-run extract_json_array + score_case on every
+    captured record and assert the recomputed score equals the stored score.
+
+    For scored=true records: exact dict equality. score_case is a pure function
+    of (pred, expected, mode, doc), so the recomputed dict must be identical to
+    the stored dict. No float tolerance is needed because the same arithmetic
+    produces the same float bits. If a future metric introduces nondeterminism,
+    switch to a tolerance comparison and document why.
+
+    For scored=false (timeout) records: skip the equality check, assert only
+    that score["timed_out"] is present and true.
+
+    On mismatch: name the (model, mode, slug, case_id, rep) cell and the field
+    that differs. Print to stderr. Return False.
+
+    On success: print a summary and return True.
+    """
+    import glob
+    if not os.path.isdir(captures_dir):
+        print(f"replay: capture dir does not exist: {captures_dir}",
+              file=sys.stderr)
+        return False
+    files = sorted(glob.glob(os.path.join(captures_dir, "*.jsonl")))
+    n_files = len(files)
+    if n_files == 0:
+        print(f"replay: no .jsonl captures found in {captures_dir} "
+              f"(zero captures means the grid run produced nothing to verify)",
+              file=sys.stderr)
+        return False
+    total_records = 0
+    scored_verified = 0
+    timeout_checked = 0
+
+    for fpath in files:
+        with open(fpath) as f:
+            for lineno, line in enumerate(f, 1):
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    record = json.loads(line)
+                except json.JSONDecodeError as e:
+                    print(f"replay: malformed JSON in {fpath} line {lineno}: {e}",
+                          file=sys.stderr)
+                    return False
+                total_records += 1
+                model = record.get("model", "?")
+                mode = record.get("mode", "?")
+                slug = record.get("slug", "?")
+                case_id = record.get("case_id", "?")
+                rep = record.get("rep", "?")
+                cell = (f"model={model}, mode={mode}, slug={slug}, "
+                        f"case_id={case_id}, rep={rep}")
+                stored_score = record["score"]
+                if record.get("scored"):
+                    pred = ev.extract_json_array(record["raw_output"])
+                    recomputed = ev.score_case(
+                        pred, record["expected"],
+                        record["mode"], record["doc"])
+                    if recomputed != stored_score:
+                        all_keys = sorted(set(list(recomputed.keys())
+                                             + list(stored_score.keys())))
+                        diff_field = "(unknown)"
+                        for k in all_keys:
+                            if recomputed.get(k) != stored_score.get(k):
+                                diff_field = k
+                                break
+                        print(f"REPLAY MISMATCH: {cell}", file=sys.stderr)
+                        print(f"  field '{diff_field}': "
+                              f"stored={stored_score.get(diff_field)!r} "
+                              f"recomputed={recomputed.get(diff_field)!r}",
+                              file=sys.stderr)
+                        return False
+                    scored_verified += 1
+                else:
+                    if not stored_score.get("timed_out"):
+                        print(f"REPLAY MISMATCH: {cell}", file=sys.stderr)
+                        print("  scored=false but score['timed_out'] "
+                              "is not true", file=sys.stderr)
+                        return False
+                    timeout_checked += 1
+
+    print(f"replay: {n_files} files, {total_records} records, "
+          f"{scored_verified} scored verified, {timeout_checked} timeout checked")
+    return True
+
+
 def self_test():
     """The scorer must be a pure function of (raw_output, expected, doc).
     Re-scoring the same input twice must give identical results."""
@@ -307,16 +395,96 @@ def self_test():
     finally:
         shutil.rmtree(tmpdir5)
 
+    # ================================================================ Step 6
+    # Replay: re-run extract_json_array + score_case on captured records and
+    # assert the recomputed score matches the stored score.
+    doc6 = "Per a report [1], X happened. Per a study [2], Y happened."
+    raw6 = '[{"claim":"X happened","source_ref":"[1]"},{"claim":"Y happened","source_ref":"[2]"}]'
+    expected6 = [{"source_ref": "[1]", "key_phrase": "X happened"},
+                 {"source_ref": "[2]", "key_phrase": "Y happened"}]
+    pred6 = ev.extract_json_array(raw6)
+    score6 = ev.score_case(pred6, expected6, "direct", doc6)
+
+    base_rec = {
+        "model": "test-model", "mode": "direct",
+        "slug": "t0.0-tk20-tp0.9-rp1.0-pp0.0-s1",
+        "config": {"temp": 0.0, "seed": 0, "threads": 7},
+        "case_id": "c1", "rep": 0,
+        "raw_output": raw6, "expected": expected6, "doc": doc6,
+        "score": score6, "seconds": 1.0, "scored": True,
+    }
+
+    # Test 11: replay on valid captures passes.
+    tmpdir11 = tempfile.mkdtemp()
+    try:
+        cap11 = os.path.join(tmpdir11, "test-model-direct-t0.0.jsonl")
+        with open(cap11, "w") as f:
+            f.write(json.dumps(base_rec) + "\n")
+        ok11 = replay(tmpdir11)
+        assert ok11 is True, "test 11: replay should pass on valid captures"
+    finally:
+        shutil.rmtree(tmpdir11)
+
+    # Test 12: replay on a mutated score fails and names the cell.
+    tmpdir12 = tempfile.mkdtemp()
+    try:
+        import io
+        from contextlib import redirect_stderr
+        mutated = dict(base_rec)
+        mutated["score"] = dict(score6)
+        mutated["score"]["recall"] = 0.5
+        cap12 = os.path.join(tmpdir12, "test-model-direct-t0.0.jsonl")
+        with open(cap12, "w") as f:
+            f.write(json.dumps(mutated) + "\n")
+        buf = io.StringIO()
+        with redirect_stderr(buf):
+            ok12 = replay(tmpdir12)
+        assert ok12 is False, "test 12: replay should fail on mutated score"
+        err = buf.getvalue()
+        assert "REPLAY MISMATCH" in err, "test 12: error should name the mismatch"
+        assert "test-model" in err and "direct" in err and "c1" in err \
+            and "rep=0" in err, \
+            f"test 12: error should name the cell, got: {err}"
+        assert "recall" in err, \
+            f"test 12: error should name the differing field, got: {err}"
+    finally:
+        shutil.rmtree(tmpdir12)
+
+    # Test 13: replay on scored=false (timeout) record checks timed_out.
+    tmpdir13 = tempfile.mkdtemp()
+    try:
+        rec13 = dict(base_rec)
+        rec13["scored"] = False
+        rec13["raw_output"] = ""
+        rec13["score"] = {"valid_json": False, "timed_out": True,
+                          "recall": 0.0, "precision": 0.0,
+                          "citation_acc": None, "matched": 0,
+                          "expected_n": 2, "quote_match": None, "f1": 0.0}
+        cap13 = os.path.join(tmpdir13, "test-model-direct-t0.0.jsonl")
+        with open(cap13, "w") as f:
+            f.write(json.dumps(rec13) + "\n")
+        ok13 = replay(tmpdir13)
+        assert ok13 is True, "test 13: replay should pass on timeout record"
+    finally:
+        shutil.rmtree(tmpdir13)
+
     print("self-test: scorer is deterministic, one-to-one assignment works")
     print("self-test: capture round-trip writes and reads back all required fields")
     print("self-test: load_config validates, resolves, and assigns seeds correctly")
     print("self-test: strict_schema_validation wires --json-schema per mode")
+    print("self-test: replay verifies scores, names mismatches, checks timeouts")
     return True
 
 
 if __name__ == "__main__":
     mode = sys.argv[1] if len(sys.argv) > 1 else "selftest"
+    if mode in ("--replay", "replay"):
+        if len(sys.argv) < 3:
+            print("replay requires a directory argument", file=sys.stderr)
+            sys.exit(2)
+        ok = replay(sys.argv[2])
+        sys.exit(0 if ok else 1)
     if mode == "selftest":
         sys.exit(0 if self_test() else 1)
-    print("capture/replay modes need --capture wiring in eval.py; run selftest", file=sys.stderr)
+    print("usage: verify.py [selftest|--replay <dir>]", file=sys.stderr)
     sys.exit(2)

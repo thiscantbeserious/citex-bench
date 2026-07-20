@@ -526,6 +526,16 @@ def main():
                       f"({score['matched']}/{score['expected_n']}, {dt}s){qm}{f1}{flag}",
                       flush=True)
 
+    # Step 6: deterministic replay. verify.py imports eval (import eval as ev),
+    # so importing verify here would create a circular import. Use a subprocess
+    # call instead: python3 eval/verify.py --replay <capture_dir>.
+    verify_script = os.path.join(os.path.dirname(__file__), "verify.py")
+    replay_cmd = [sys.executable, verify_script, "--replay", args.capture_dir]
+    replay_result = subprocess.run(replay_cmd)
+    if replay_result.returncode != 0:
+        print("replay failed, exiting nonzero", file=sys.stderr)
+        sys.exit(1)
+
 
 if __name__ == "__main__":
     main()
