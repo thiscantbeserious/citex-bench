@@ -22,6 +22,34 @@ import argparse, difflib, json, os, re, subprocess, sys, time
 
 MARKER_RE = re.compile(r"\[\d+\]")
 
+# Step 4 flat JSON schemas for --json-schema. No $ref, all string properties.
+# The fork accepts a schema string via --json-schema (confirmed via --help on
+# bonsai-floor:prism). Schemas with external $ref need --grammar instead, so
+# these are kept flat. Schema constrains JSON syntax, not content: a fabricated
+# claim passes as a valid string. It kills the validity failure mode, not the
+# hallucination one, so precision stays primary.
+DIRECT_SCHEMA = {
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "claim": {"type": "string"},
+            "source_ref": {"type": "string"},
+        },
+    },
+}
+QUOTE_SCHEMA = {
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {
+            "claim": {"type": "string"},
+            "quote": {"type": "string"},
+        },
+    },
+}
+_MODE_SCHEMAS = {"direct": DIRECT_SCHEMA, "quote": QUOTE_SCHEMA}
+
 # Keys every defaults block must define. A param set may override these plus
 # "temp". Nothing else is allowed.
 _SAMPLABLE_KEYS = ["repeat_penalty", "top_k", "top_p",
@@ -195,8 +223,42 @@ DOCUMENT:
 JSON:"""
 
 
+def _build_cmd(binary, model, prompt, threads, ctx, max_tokens, sample,
+              template="", strict_schema_validation=True, mode=None):
+    """Build the llama-completion argv list. Does not run the model. Extracted
+    from run_model so verify.py can assert on the cmd without a GPU.
+
+    `strict_schema_validation` (default True, matching config): when True, pass
+    --json-schema with the flat schema for `mode`. When False, no constraint,
+    post-hoc extract as today. The caller passes `mode` ("direct" or "quote")
+    so this helper can pick the right schema from _MODE_SCHEMAS. Passing the
+    mode is cleaner than passing the schema dict: the schemas are module-level
+    constants keyed by mode, and main already knows the mode.
+
+    See run_model for `sample` and `template` docs."""
+    cmd = [binary, "-m", model, "-p", prompt, "-n", str(max_tokens),
+           "-t", str(threads), "-c", str(ctx), "-ngl", "0",
+           "--temp", str(sample["temp"]),
+           "--top-k", str(sample["top_k"]),
+           "--top-p", str(sample["top_p"]),
+           "--repeat-penalty", str(sample["repeat_penalty"]),
+           "--presence-penalty", str(sample["presence_penalty"]),
+           "--seed", str(sample["seed"])]
+    if template == "embedded":
+        cmd += ["--jinja", "-cnv"]
+    elif template:
+        cmd += ["--jinja", "--chat-template-file", template, "-cnv"]
+    if strict_schema_validation:
+        if mode not in _MODE_SCHEMAS:
+            raise ValueError(
+                f"strict_schema_validation=True requires mode in "
+                f"{list(_MODE_SCHEMAS)}, got {mode!r}")
+        cmd += ["--json-schema", json.dumps(_MODE_SCHEMAS[mode])]
+    return cmd
+
+
 def run_model(binary, model, prompt, threads, ctx, max_tokens, timeout, sample,
-             template=""):
+             template="", strict_schema_validation=True, mode=None):
     """One-shot completion. Uses llama-completion, NOT llama-cli: in this fork
     llama-cli is an interactive REPL that rejects -no-cnv and spins forever on
     EOF stdin (~1GB of "> " prompts, then OOM).
@@ -213,19 +275,15 @@ def run_model(binary, model, prompt, threads, ctx, max_tokens, timeout, sample,
                   mode so -p is treated as a user turn with add_generation_prompt.
       <path>    use a custom jinja template file via --jinja --chat-template-file
                 <path> -cnv.
+    `strict_schema_validation` (default True): when True, pass --json-schema
+      with the flat schema for `mode` (direct or quote). When False, no
+      constraint, post-hoc extract as today. Schema constrains JSON syntax,
+      not content. See _MODE_SCHEMAS.
+    `mode` ("direct" or "quote"): selects the schema when strict is True.
+      Required when strict_schema_validation is True.
     Flags confirmed via `llama-completion --help` on bonsai-floor:prism."""
-    cmd = [binary, "-m", model, "-p", prompt, "-n", str(max_tokens),
-           "-t", str(threads), "-c", str(ctx), "-ngl", "0",
-           "--temp", str(sample["temp"]),
-           "--top-k", str(sample["top_k"]),
-           "--top-p", str(sample["top_p"]),
-           "--repeat-penalty", str(sample["repeat_penalty"]),
-           "--presence-penalty", str(sample["presence_penalty"]),
-           "--seed", str(sample["seed"])]
-    if template == "embedded":
-        cmd += ["--jinja", "-cnv"]
-    elif template:
-        cmd += ["--jinja", "--chat-template-file", template, "-cnv"]
+    cmd = _build_cmd(binary, model, prompt, threads, ctx, max_tokens, sample,
+                    template, strict_schema_validation, mode)
     r = subprocess.run(cmd, capture_output=True, text=True,
                        timeout=timeout, stdin=subprocess.DEVNULL)
     return r.stdout
@@ -376,6 +434,12 @@ def main():
     # applied identically to every tier alongside the embedded template.
     ap.add_argument("--no-think", action="store_true",
                    help="append /no_think to the prompt (Step 3 fallback)")
+    # Step 4: schema-validated JSON, default-on. BooleanOptionalAction gives
+    # --strict-schema-validation / --no-strict-schema-validation. In the smoke
+    # the user controls it via CLI. In the grid (Step 5) it comes from config.
+    ap.add_argument("--strict-schema-validation",
+                   action=argparse.BooleanOptionalAction, default=True,
+                   help="pass --json-schema to constrain output (default on)")
     args = ap.parse_args()
 
     # The 1.7B card specifically calls for a presence penalty. Apply one unless the
@@ -400,7 +464,8 @@ def main():
             template = PROMPT_QUOTE if mode == "quote" else PROMPT_DIRECT
             print(f"\n=== {label}  [{mode}]  temp={temp} top-k={args.top_k} top-p={args.top_p} "
                   f"rep={args.repeat_penalty} presence={presence} seed={args.seed} "
-                  f"template={args.template or 'raw'} no_think={args.no_think} ===", flush=True)
+                  f"template={args.template or 'raw'} no_think={args.no_think} "
+                  f"strict_schema={args.strict_schema_validation} ===", flush=True)
             results = []
             for case in cases:
                 t0 = time.time()
@@ -414,7 +479,9 @@ def main():
                                     prompt,
                                     args.threads, args.ctx, args.max_tokens,
                                     args.timeout, sample,
-                                    template=args.template)
+                                    template=args.template,
+                                    strict_schema_validation=args.strict_schema_validation,
+                                    mode=mode)
                     s = score_case(extract_json_array(raw), case["expected"], mode, case["text"])
                     dt = time.time() - t0
                 except subprocess.TimeoutExpired:

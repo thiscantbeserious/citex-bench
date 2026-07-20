@@ -219,8 +219,46 @@ def self_test():
                 pass
         _tmp_config_paths.clear()
 
+    # ================================================================ Step 4
+    # strict_schema_validation wires --json-schema into the llama-completion
+    # cmd. We test by calling _build_cmd (the helper run_model delegates to)
+    # directly and asserting on the returned list. No subprocess, no model, no
+    # GPU. This isolates the flag-to-arg wiring from the model run.
+    sample = {"temp": 0.5, "top_k": 20, "top_p": 0.9, "repeat_penalty": 1.0,
+              "presence_penalty": 0.5, "seed": 0}
+
+    # strict=True, mode=quote: cmd carries --json-schema with QUOTE_SCHEMA.
+    cmd_q = ev._build_cmd("llama-completion", "m.gguf", "prompt", 7, 2048,
+                          400, sample, template="",
+                          strict_schema_validation=True, mode="quote")
+    assert "--json-schema" in cmd_q, "strict quote: --json-schema missing"
+    qi = cmd_q.index("--json-schema")
+    q_schema = cmd_q[qi + 1]
+    assert '"quote"' in q_schema, "strict quote: schema lacks quote field"
+    assert '"source_ref"' not in q_schema, \
+        "strict quote: schema has source_ref (wrong schema picked)"
+
+    # strict=True, mode=direct: cmd carries --json-schema with DIRECT_SCHEMA.
+    cmd_d = ev._build_cmd("llama-completion", "m.gguf", "prompt", 7, 2048,
+                          400, sample, template="",
+                          strict_schema_validation=True, mode="direct")
+    di = cmd_d.index("--json-schema")
+    d_schema = cmd_d[di + 1]
+    assert '"source_ref"' in d_schema, \
+        "strict direct: schema lacks source_ref field"
+    assert '"quote"' not in d_schema, \
+        "strict direct: schema has quote (wrong schema picked)"
+
+    # strict=False: cmd must NOT carry --json-schema (post-hoc extract path).
+    cmd_f = ev._build_cmd("llama-completion", "m.gguf", "prompt", 7, 2048,
+                          400, sample, template="",
+                          strict_schema_validation=False, mode="quote")
+    assert "--json-schema" not in cmd_f, \
+        "strict=False: --json-schema should be absent"
+
     print("self-test: scorer is deterministic, one-to-one assignment works")
     print("self-test: load_config validates, resolves, and assigns seeds correctly")
+    print("self-test: strict_schema_validation wires --json-schema per mode")
     return True
 
 
