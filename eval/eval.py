@@ -22,6 +22,152 @@ import argparse, difflib, json, os, re, subprocess, sys, time
 
 MARKER_RE = re.compile(r"\[\d+\]")
 
+# Keys every defaults block must define. A param set may override these plus
+# "temp". Nothing else is allowed.
+_SAMPLABLE_KEYS = ["repeat_penalty", "top_k", "top_p",
+                   "presence_penalty", "strict_schema_validation", "template"]
+
+
+def _resolve_model_file(models_dir, quant):
+    """Pick the GGUF filename matching `quant` from `models_dir`, applying the
+    same exclusion and packing preference as bench.sh's case statement: exclude
+    any candidate whose filename contains mmproj, spark, drafter, f16, bf16, or
+    PQ2_0 (case-insensitive), then prefer g128 (native, no _g64 suffix) over
+    g64. Returns the filename string, or None when models_dir is None or no
+    file matches."""
+    if not models_dir or not os.path.isdir(models_dir):
+        return None
+    try:
+        entries = sorted(os.listdir(models_dir))
+    except OSError:
+        return None
+    cands = []
+    for f in entries:
+        if not f.endswith(".gguf"):
+            continue
+        if quant not in f:
+            continue
+        lf = f.lower()
+        if "mmproj" in lf or "spark" in lf or "drafter" in lf \
+                or "f16" in lf or "bf16" in lf or "pq2_0" in lf:
+            continue
+        cands.append(f)
+    if not cands:
+        return None
+    # Prefer g128 (native pack): the file WITHOUT _g64. Fall back to _g64.
+    for f in cands:
+        if "_g64" not in f:
+            return f
+    return cands[0]
+
+
+def _set_slug(s):
+    """Readable identity slug for a resolved param set."""
+    return (f"t{s['temp']:.1f}"
+            f"-tk{s['top_k']}"
+            f"-tp{s['top_p']}"
+            f"-rp{s['repeat_penalty']}"
+            f"-pp{s['presence_penalty']}"
+            f"-s{1 if s['strict_schema_validation'] else 0}")
+
+
+def load_config(path, models_dir=None):
+    """Load eval/config.json and resolve it into a structured grid.
+
+    Returns a dict with three keys:
+
+        {
+          "run": {"threads", "reps", "timeout", "modes"},
+          "defaults": {repeat_penalty, top_k, top_p, presence_penalty,
+                      strict_schema_validation, template},
+          "cells": [ ... one per (model, mode, set, rep) ... ]
+        }
+
+    Each cell is:
+
+        {
+          "model": "repo:quant",      # the HF model key as written in config
+          "repo": "prism-ml/...",     # HF repo, split on the LAST colon
+          "quant": "Q1_0",            # quant suffix
+          "resolved_file": "file.gguf" or None,
+          "mode": "direct"|"quote",
+          "rep": 0,                    # 0..N-1 where N = run.reps
+          "seed": 0,                   # temp>0 -> rep index, temp==0 -> 0
+          "slug": "t0.0-tk20-...-s1", # unique per set within a model
+          "set": {temp, repeat_penalty, top_k, top_p,
+                  presence_penalty, strict_schema_validation, template},
+        }
+
+    Validation:
+      - defaults must define every key in _SAMPLABLE_KEYS, else ValueError.
+      - a param set may override only _SAMPLABLE_KEYS plus "temp". Unknown key
+        -> ValueError naming the key and model.
+      - duplicate slug within a model -> ValueError.
+
+    Model resolution: when models_dir is given, resolve the quant to a local
+    GGUF file by filename substring with packing preference (g128 over g64,
+    PQ2_0/mmproj/F16/BF16 excluded). When models_dir is None or no file matches,
+    resolved_file is None (no error).
+    """
+    try:
+        with open(path) as f:
+            cfg = json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError) as e:
+        raise ValueError(f"cannot load config from {path}: {e}")
+
+    run = cfg["run"]
+    defaults = cfg["defaults"]
+    reps = run["reps"]
+    modes = run["modes"]
+
+    # Validate defaults: every samplable key must be present.
+    for k in _SAMPLABLE_KEYS:
+        if k not in defaults:
+            raise ValueError(f"defaults missing required key: {k}")
+
+    cells = []
+    for model_key, sets in cfg["models"].items():
+        # Split on the LAST colon to separate repo and quant.
+        idx = model_key.rfind(":")
+        if idx < 0:
+            raise ValueError(f"model key missing ':quant' suffix: {model_key}")
+        repo = model_key[:idx]
+        quant = model_key[idx + 1:]
+        resolved_file = _resolve_model_file(models_dir, quant)
+
+        seen_slugs = set()
+        for s in sets:
+            # Validate: only _SAMPLABLE_KEYS + "temp" allowed in a set.
+            for k in s:
+                if k != "temp" and k not in defaults:
+                    raise ValueError(
+                        f"unknown key '{k}' in param set for model {model_key}")
+            # Merge: start from defaults, apply overrides, add temp.
+            merged = dict(defaults)
+            merged.update({k: v for k, v in s.items() if k != "temp"})
+            merged["temp"] = s["temp"]
+            slug = _set_slug(merged)
+            if slug in seen_slugs:
+                raise ValueError(
+                    f"duplicate slug '{slug}' in model {model_key}")
+            seen_slugs.add(slug)
+            for mode in modes:
+                for rep in range(reps):
+                    seed = rep if merged["temp"] > 0 else 0
+                    cells.append({
+                        "model": model_key,
+                        "repo": repo,
+                        "quant": quant,
+                        "resolved_file": resolved_file,
+                        "mode": mode,
+                        "rep": rep,
+                        "seed": seed,
+                        "slug": slug,
+                        "set": merged,
+                    })
+
+    return {"run": run, "defaults": defaults, "cells": cells}
+
 PROMPT_DIRECT = """Extract every factual claim in the DOCUMENT that is attributed to a citation marker like [1] or [2]. Ignore claims, opinions, or predictions with no citation marker.
 
 Output ONLY a JSON array. Each element must be:

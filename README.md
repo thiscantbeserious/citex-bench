@@ -148,7 +148,6 @@ PrismML llama.cpp fork (the `prism` branch carries the low-bit CPU kernels,
 stock upstream does not).
 
 | tier | model | quant | deployed size |
-|---|---|---|---|
 | `1.7b` | Ternary-Bonsai-1.7B | Q2_0 | ~0.4 GB |
 | `1.7b-1bit` | Bonsai-1.7B | Q1_0 | ~0.2 GB |
 | `4b` | Ternary-Bonsai-4B | Q2_0 | ~1.0 GB |
@@ -156,7 +155,7 @@ stock upstream does not).
 | `8b-1bit` | Bonsai-8B | Q1_0 | ~1.1 GB |
 | `27b-1bit` | Bonsai-27B | Q1_0 | ~3.6 GB |
 
-Providers and tiers are configured in `bench.sh`'s `tier_spec()`. That is the
+Providers and tiers are configured in `eval/config.json`. That is the
 single place to point at a different vendor or model family, the rest of the
 harness is provider-agnostic. See [docs/model-selection.md](docs/model-selection.md)
 for the rationale.

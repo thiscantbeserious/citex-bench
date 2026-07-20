@@ -26,46 +26,58 @@ THREADS="${THREADS:-}"
 FORK_REF="${FORK_REF:-prism}"
 IMAGE="bonsai-floor:$(echo "$FORK_REF" | tr '/' '-')"
 
-command -v docker >/dev/null || { echo "docker not found"; exit 1; }
+command -v docker >/dev/null || {
+	echo "docker not found"
+	exit 1
+}
 
 HOST_ARCH="$(uname -m)"
 case "$HOST_ARCH" in
-  arm64|aarch64) PLATFORM="linux/arm64" ;;
-  x86_64|amd64)  PLATFORM="linux/amd64" ;;
-  *) echo "Unknown arch $HOST_ARCH"; exit 1 ;;
+arm64 | aarch64) PLATFORM="linux/arm64" ;;
+x86_64 | amd64) PLATFORM="linux/amd64" ;;
+*)
+	echo "Unknown arch $HOST_ARCH"
+	exit 1
+	;;
 esac
 
 echo "==> Building image (adds llama-cli + eval harness on top of run.sh's image)"
 docker build --platform "$PLATFORM" --build-arg FORK_REF="$FORK_REF" -t "$IMAGE" .
 
-# tier -> GGUF filename already resolved by a prior ./run.sh (same tier_spec as bench.sh)
+# tier -> GGUF filename already resolved by a prior ./run.sh (bench.sh is config.json-driven; eval.sh keeps a tier->file map for the smoke tiers)
 # macOS ships bash 3.2 (no associative arrays) — use a case statement, not declare -A.
 tier_file() {
-  case "$1" in
-    1.7b)      echo "Ternary-Bonsai-1.7B-Q2_0.gguf" ;;
-    1.7b-1bit) echo "Bonsai-1.7B-Q1_0.gguf" ;;
-    4b)        echo "Ternary-Bonsai-4B-Q2_0.gguf" ;;
-    4b-1bit)   echo "Bonsai-4B-Q1_0.gguf" ;;
-    8b-1bit)   echo "Bonsai-8B-Q1_0.gguf" ;;
-    27b-1bit)  echo "Bonsai-27B-Q1_0.gguf" ;;
-    *)         echo "" ;;
-  esac
+	case "$1" in
+	1.7b) echo "Ternary-Bonsai-1.7B-Q2_0.gguf" ;;
+	1.7b-1bit) echo "Bonsai-1.7B-Q1_0.gguf" ;;
+	4b) echo "Ternary-Bonsai-4B-Q2_0.gguf" ;;
+	4b-1bit) echo "Bonsai-4B-Q1_0.gguf" ;;
+	8b-1bit) echo "Bonsai-8B-Q1_0.gguf" ;;
+	27b-1bit) echo "Bonsai-27B-Q1_0.gguf" ;;
+	*) echo "" ;;
+	esac
 }
 
 for tier in $TIERS; do
-  f="$(tier_file "$tier")"
-  [[ -n "$f" ]] || { echo "No known GGUF filename for tier '$tier' — add it to tier_file() in eval.sh"; exit 1; }
-  [[ -f "$MODELS_DIR/$f" ]] || { echo "Model not downloaded yet: $f — run TIERS=\"$tier\" ./run.sh first"; exit 1; }
+	f="$(tier_file "$tier")"
+	[[ -n "$f" ]] || {
+		echo "No known GGUF filename for tier '$tier' — add it to tier_file() in eval.sh"
+		exit 1
+	}
+	[[ -f "$MODELS_DIR/$f" ]] || {
+		echo "Model not downloaded yet: $f — run TIERS=\"$tier\" ./run.sh first"
+		exit 1
+	}
 
-  # Plain string + intentional word-splitting below, not an array: bash 3.2
-  # (macOS default) treats expanding an empty array under `set -u` as an
-  # unbound-variable error. Safe here since $THREADS is always a bare integer.
-  THREAD_FLAG=""
-  [[ -n "$THREADS" ]] && THREAD_FLAG="--threads $THREADS"
+	# Plain string + intentional word-splitting below, not an array: bash 3.2
+	# (macOS default) treats expanding an empty array under `set -u` as an
+	# unbound-variable error. Safe here since $THREADS is always a bare integer.
+	THREAD_FLAG=""
+	[[ -n "$THREADS" ]] && THREAD_FLAG="--threads $THREADS"
 
-  docker run --rm --platform "$PLATFORM" \
-    -v "$MODELS_DIR:/models" \
-    -e PYTHONUNBUFFERED=1 \
-    --entrypoint python3 \
-    "$IMAGE" -u /opt/eval/eval.py --model "/models/$f" --tier "$tier" --mode "$MODE" --temps "$TEMPS" $THREAD_FLAG
+	docker run --rm --platform "$PLATFORM" \
+		-v "$MODELS_DIR:/models" \
+		-e PYTHONUNBUFFERED=1 \
+		--entrypoint python3 \
+		"$IMAGE" -u /opt/eval/eval.py --model "/models/$f" --tier "$tier" --mode "$MODE" --temps "$TEMPS" $THREAD_FLAG
 done

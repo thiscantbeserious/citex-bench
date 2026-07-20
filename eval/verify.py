@@ -17,9 +17,55 @@ Usage:
 A real implementation would record raw I/O during the eval. For now this is a
 skeleton asserting the scorer is deterministic: same raw output -> same score.
 """
-import json, os, sys
+import json, os, sys, tempfile, shutil
 sys.path.insert(0, os.path.dirname(__file__))
 import eval as ev  # noqa: E402
+
+# -------------------------------------------------------------------- helpers
+
+def _base_config():
+    """A minimal valid config dict for building error-case variants."""
+    return {
+        "run": {"threads": 7, "reps": 5, "timeout": 600,
+                "modes": ["direct", "quote"]},
+        "defaults": {
+            "repeat_penalty": 1.0, "top_k": 20, "top_p": 0.9,
+            "presence_penalty": 0.0, "strict_schema_validation": True,
+            "template": "",
+        },
+        "models": {
+            "prism-ml/Bonsai-1.7B-gguf:Q1_0": [
+                {"temp": 0.0, "presence_penalty": 0.5},
+                {"temp": 0.5, "presence_penalty": 0.5},
+            ],
+        },
+    }
+
+
+# Temp config files created by _write_tmp_config. Tracked so self_test can
+# clean them all up in a finally block instead of leaking into /tmp.
+_tmp_config_paths = []
+
+
+def _write_tmp_config(cfg_dict):
+    """Write a config dict to a temp file, return the path. The path is tracked
+    in _tmp_config_paths for cleanup by self_test."""
+    fd, path = tempfile.mkstemp(suffix=".json")
+    with os.fdopen(fd, "w") as f:
+        json.dump(cfg_dict, f)
+    _tmp_config_paths.append(path)
+    return path
+
+
+def _expect_value_error(fn, name=None):
+    """Assert that fn() raises ValueError, optionally checking the message."""
+    try:
+        fn()
+    except ValueError as e:
+        if name and name not in str(e):
+            raise AssertionError(f"ValueError did not name '{name}': {e}")
+        return
+    raise AssertionError("expected ValueError, none raised")
 
 
 def self_test():
@@ -63,7 +109,104 @@ def self_test():
     assert _p is not None and abs(_p - 1.0) < 1e-9, \
         f"decoy precision: expected 1.0, got {_p}"
 
+    # ================================================================ Step 2
+    # load_config behavior: validation, slug, seed, resolution.
+    config_path = os.path.join(os.path.dirname(__file__), "config.json")
+    try:
+        # 1. Real config loads, returns 3 models with expected set counts.
+        cfg = ev.load_config(config_path)
+        assert "run" in cfg and "defaults" in cfg and "cells" in cfg
+        assert cfg["run"]["reps"] == 5
+        assert cfg["run"]["threads"] == 7
+        assert cfg["run"]["modes"] == ["direct", "quote"]
+        sets_by_model = {}
+        for cell in cfg["cells"]:
+            sets_by_model.setdefault(cell["model"], set()).add(cell["slug"])
+        assert len(sets_by_model["prism-ml/Bonsai-1.7B-gguf:Q1_0"]) == 4, \
+            f"1.7B sets: expected 4, got {len(sets_by_model['prism-ml/Bonsai-1.7B-gguf:Q1_0'])}"
+        assert len(sets_by_model["prism-ml/Bonsai-4B-gguf:Q1_0"]) == 3, \
+            f"4B sets: expected 3, got {len(sets_by_model['prism-ml/Bonsai-4B-gguf:Q1_0'])}"
+        assert len(sets_by_model["prism-ml/Bonsai-8B-gguf:Q1_0"]) == 3, \
+            f"8B sets: expected 3, got {len(sets_by_model['prism-ml/Bonsai-8B-gguf:Q1_0'])}"
+
+        # 2. Unknown key in a set raises ValueError.
+        bad = _base_config()
+        bad["models"]["prism-ml/Bonsai-1.7B-gguf:Q1_0"][0]["temperature"] = 0.5
+        _expect_value_error(lambda: ev.load_config(_write_tmp_config(bad)))
+
+        # 3. Missing default raises ValueError naming the key.
+        bad_def = _base_config()
+        del bad_def["defaults"]["top_k"]
+        _expect_value_error(lambda: ev.load_config(_write_tmp_config(bad_def)), name="top_k")
+
+        # 4. Duplicate slug within a model raises ValueError.
+        dup = _base_config()
+        # Two sets that merge to the same resolved params (both temp 0.5, defaults
+        # fill the rest identically) produce the same slug.
+        dup["models"]["prism-ml/Bonsai-1.7B-gguf:Q1_0"] = [
+            {"temp": 0.5, "top_k": 20},
+            {"temp": 0.5},
+        ]
+        _expect_value_error(lambda: ev.load_config(_write_tmp_config(dup)))
+
+        # 5. Seed assignment: temp 0.5 with reps=3 yields seeds [0,1,2] across reps.
+        #    temp 0.0 yields seed 0 for all reps.
+        seed_cfg = _base_config()
+        seed_cfg["run"]["reps"] = 3
+        seed_cfg["run"]["modes"] = ["direct"]
+        seed_cfg["models"]["prism-ml/Bonsai-1.7B-gguf:Q1_0"] = [
+            {"temp": 0.0, "presence_penalty": 0.5},
+            {"temp": 0.5, "presence_penalty": 0.5},
+        ]
+        sc = ev.load_config(_write_tmp_config(seed_cfg))
+        temp05_seeds = sorted(c["seed"] for c in sc["cells"]
+                              if abs(c["set"]["temp"] - 0.5) < 1e-9)
+        assert temp05_seeds == [0, 1, 2], \
+            f"temp 0.5 seeds: expected [0,1,2], got {temp05_seeds}"
+        temp0_seeds = [c["seed"] for c in sc["cells"]
+                      if abs(c["set"]["temp"]) < 1e-9]
+        assert all(s == 0 for s in temp0_seeds), \
+            f"temp 0.0 seeds: expected all 0, got {temp0_seeds}"
+
+        # 6. Slug format on one known set.
+        slug_cell = next(c for c in cfg["cells"]
+                         if c["model"] == "prism-ml/Bonsai-1.7B-gguf:Q1_0"
+                         and abs(c["set"]["temp"]) < 1e-9
+                         and abs(c["set"]["presence_penalty"] - 0.5) < 1e-9)
+        assert slug_cell["slug"] == "t0.0-tk20-tp0.9-rp1.0-pp0.5-s1", \
+            f"slug: expected t0.0-tk20-tp0.9-rp1.0-pp0.5-s1, got {slug_cell['slug']}"
+
+        # 7. Model resolution against a temp dir with fake files. The excluded
+        #    candidates all CONTAIN the quant (Q1_0) so they pass the substring
+        #    filter and reach the exclusion logic. If the exclusion is deleted,
+        #    _resolve_model_file would return one of them instead of the valid
+        #    file, failing the assertion.
+        tmpdir = tempfile.mkdtemp()
+        try:
+            open(os.path.join(tmpdir, "Bonsai-1.7B-Q1_0.gguf"), "w").close()
+            open(os.path.join(tmpdir, "Bonsai-1.7B-Q1_0-F16.gguf"), "w").close()
+            open(os.path.join(tmpdir, "Bonsai-1.7B-Q1_0-mmproj.gguf"), "w").close()
+            open(os.path.join(tmpdir, "Bonsai-1.7B-Q1_0-PQ2_0.gguf"), "w").close()
+            open(os.path.join(tmpdir, "Bonsai-1.7B-Q1_0-BF16.gguf"), "w").close()
+            open(os.path.join(tmpdir, "Bonsai-1.7B-Q1_0-Drafter.gguf"), "w").close()
+            open(os.path.join(tmpdir, "Bonsai-1.7B-Q1_0-Dspark.gguf"), "w").close()
+            rc = ev.load_config(config_path, models_dir=tmpdir)
+            cell17 = next(c for c in rc["cells"]
+                          if c["model"] == "prism-ml/Bonsai-1.7B-gguf:Q1_0")
+            assert cell17["resolved_file"] == "Bonsai-1.7B-Q1_0.gguf", \
+                f"resolved_file: expected Bonsai-1.7B-Q1_0.gguf, got {cell17['resolved_file']}"
+        finally:
+            shutil.rmtree(tmpdir)
+    finally:
+        for p in _tmp_config_paths:
+            try:
+                os.unlink(p)
+            except OSError:
+                pass
+        _tmp_config_paths.clear()
+
     print("self-test: scorer is deterministic, one-to-one assignment works")
+    print("self-test: load_config validates, resolves, and assigns seeds correctly")
     return True
 
 
