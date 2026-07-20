@@ -157,7 +157,9 @@ stock upstream does not).
 
 Providers and tiers are configured in `eval/config.json`. That is the
 single place to point at a different vendor or model family, the rest of the
-harness is provider-agnostic. See [docs/model-selection.md](docs/model-selection.md)
+harness is provider-agnostic. The current grid config runs the three Q1_0
+sizes (1.7B, 4B, 8B); the ternary and 27B rows below document what else
+exists in the family. See [docs/model-selection.md](docs/model-selection.md)
 for the rationale.
 
 ---
@@ -167,11 +169,16 @@ for the rationale.
 ```
 citex-bench/
 ├── Dockerfile           build definition for the CPU-only llama.cpp image
-├── run.sh / eval.sh     host wrappers for speed / accuracy
-├── bench.sh             in-container speed benchmark
-├── summarize.py         turns bench output into wall-clock seconds + bandwidth check
+├── run.sh / eval.sh     host wrappers for speed / accuracy grid
+├── bench.sh             in-container speed benchmark (reads eval/config.json)
+├── summarize.py         turns speed bench output into wall-clock seconds + bandwidth check
 ├── membw.c              STREAM-triad memory-bandwidth probe
-├── eval/                accuracy harness, test cases, scorer self-check
+├── eval/                accuracy harness, config grid, scorer, captures, replay, summary
+│   ├── eval.py          grid runner: iterates config cells, writes JSONL captures
+│   ├── verify.py        scorer self-test + deterministic capture replay
+│   ├── summarize.py     capture-based accuracy report (variance, latency, determinism)
+│   ├── config.json      the grid: models, param sets, modes, reps, threads
+│   └── cases.jsonl      the 5 accuracy test cases
 ├── docs/                rationale and plans
 ├── reports/             result writeups and raw logs
 ├── results/             raw speed output
@@ -193,18 +200,37 @@ Models cache to `./models/` (bind-mounted, survives rebuilds, gitignored).
 Requires Docker. Native build only, do not pass `--platform` to cross-build.
 an emulated container benchmarks QEMU, not your CPU.
 
+The model list, param sets, modes, reps, and threads all live in
+[eval/config.json](eval/config.json). That is the single source of truth, the
+wrapper scripts no longer take a `TIERS` / `MODE` / `TEMPS` env. To run a
+subset, point `CONFIG=` at a trimmed config.
+
 ```bash
-# Speed benchmark (default tiers):
+# Speed benchmark (models from eval/config.json):
 ./run.sh
 
-# One tier, scoped workload:
-TIERS="1.7b-1bit" DOC_TOKENS=700 OUT_TOKENS=300 REPS=1 ./run.sh
+# Scoped speed workload:
+DOC_TOKENS=700 OUT_TOKENS=300 REPS=1 ./run.sh
 
 # Label the machine for cross-machine comparison (do NOT use your real hostname):
 LABEL=thinkpad-t14 ./run.sh
 
-# Accuracy eval, direct vs quote architectures, temps 0/0.5/0.7:
-TIERS="1.7b-1bit 4b-1bit 8b-1bit" ./eval.sh
+# Accuracy grid (full grid from eval/config.json, writes captures, replays,
+# summarizes):
+./eval.sh
+
+# Tighter per-cell timeout for a smoke:
+TIMEOUT=120 ./eval.sh
+
+# Re-verify captured scores deterministically (re-runs the scorer on every
+# capture, exits nonzero on a mismatch):
+python3 eval/verify.py --replay reports/captures
+
+# Regenerate the accuracy report from existing captures:
+python3 eval/summarize.py reports/captures
+
+# Scorer + loader + capture + replay + summarize self-tests:
+python3 eval/verify.py selftest
 ```
 
 Docker Desktop users: Settings -> Resources, give the VM all cores and >=12 GB
@@ -214,10 +240,21 @@ RAM, or the larger tiers OOM or thrash.
 
 ## Measured results
 
-See [reports/](reports/) for dated result writeups and raw logs. The current
-entry is a single-pass scout run, directional only. A multi-pass rebuild with
-full parameter sweep is the planned next step in
-[docs/eval-redesign-plan.md](docs/eval-redesign-plan.md).
+See [reports/](reports/) for dated result writeups and raw logs.
+
+- [reports/00-results-2026-07-18.md](reports/00-results-2026-07-18.md), the
+ frozen single-pass scout run. Directional only, not comparable to later
+ runs. Do not reuse its numbers.
+- [reports/accuracy-baseline-2026-07-20.txt](reports/accuracy-baseline-2026-07-20.txt),
+ the current accuracy baseline from the multi-pass grid (3 models, 10 param
+ sets, 2 modes, 5 reps, 500 invocations, 0 timeouts, all 500 captures
+ replay-verified, all 6 greedy sets deterministic). A new baseline, not
+ comparable to the scout. The raw captures live under
+ [reports/captures/](reports/captures/).
+
+The grid is config-driven. To rerun, point `eval.sh` at a config and run it,
+then read the summary `eval.sh` prints (or regenerate it with
+`python3 eval/summarize.py reports/captures`).
 
 ---
 

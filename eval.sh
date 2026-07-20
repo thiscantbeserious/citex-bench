@@ -1,30 +1,30 @@
 #!/usr/bin/env bash
-# eval.sh — accuracy check for tiers that already passed the speed budget.
-# Runs eval/cases.jsonl through each tier's already-downloaded GGUF via
-# llama-completion, comparing DIRECT ({claim,source_ref}) vs QUOTE
-# ({claim,quote} + deterministic citation resolution) architectures.
-# Speed passing != accuracy passing; this is the other half of "is this tier usable."
+# eval.sh — accuracy grid for the models in eval/config.json.
 #
-#   ./eval.sh                          # default tiers (direct vs quote, both modes)
-#   TIERS="1.7b-1bit" ./eval.sh        # one tier
-#   MODE=quote ./eval.sh               # quote architecture only
+# Runs eval/cases.jsonl through every (model, mode, param-set, rep) cell in
+# eval/config.json via llama-completion, compares the direct ({claim,
+# source_ref}) vs quote ({claim, quote} + deterministic citation resolution)
+# architectures, writes one JSONL capture per (model, mode, slug) under
+# reports/captures/, auto-replays every capture through the scorer, then
+# summarizes. Speed passing != accuracy passing; this is the other half of
+# "is this tier usable."
+#
+#   ./eval.sh                              # full grid from eval/config.json
+#   TIMEOUT=120 ./eval.sh                  # tighter per-cell timeout (smoke)
+#   CONFIG=./eval/config.json ./eval.sh    # point at a different config
+#
+# The model list, param sets, modes, reps, and threads all come from
+# eval/config.json. There is no TIERS / MODE / TEMPS / THREADS env here, the
+# config drives all of it. To run a subset, edit a config and pass CONFIG=.
 set -euo pipefail
 
-TIERS="${TIERS:-1.7b-1bit 4b-1bit 8b-1bit}"
-MODE="${MODE:-both}"
-# Bonsai model card: temp 0.5 default, range 0.5-0.7. Sweep the full range plus
-# a greedy temp=0 control. Sampling params (top-k 20, top-p 0.9, rep 1.0, and the
-# 1.7b presence penalty) are applied by eval.py per the card — temp is the only
-# axis swept here. Override with TEMPS="0.5,0".
-TEMPS="${TEMPS:-0,0.5,0.7}"
-MODELS_DIR="${MODELS_DIR:-$PWD/models}"
-# THREADS is intentionally unset by default — the host's core count (e.g. via
-# sysctl) is NOT the container's; bench.sh discovered this the hard way (host
-# reports far more cores than Docker Desktop's VM actually allocates). Let
-# eval.py's os.cpu_count(), evaluated inside the container, pick the real number.
-THREADS="${THREADS:-}"
 FORK_REF="${FORK_REF:-prism}"
 IMAGE="bonsai-floor:$(echo "$FORK_REF" | tr '/' '-')"
+MODELS_DIR="${MODELS_DIR:-$PWD/models}"
+CONFIG="${CONFIG:-$PWD/eval/config.json}"
+CASES="${CASES:-$PWD/eval/cases.jsonl}"
+CAPTURE_DIR="${CAPTURE_DIR:-$PWD/reports/captures}"
+TIMEOUT="${TIMEOUT:-600}"
 
 command -v docker >/dev/null || {
 	echo "docker not found"
@@ -41,43 +41,49 @@ x86_64 | amd64) PLATFORM="linux/amd64" ;;
 	;;
 esac
 
+[[ -f "$CONFIG" ]] || {
+	echo "config not found: $CONFIG"
+	exit 1
+}
+[[ -f "$CASES" ]] || {
+	echo "cases not found: $CASES"
+	exit 1
+}
+mkdir -p "$CAPTURE_DIR"
+
 echo "==> Building image (adds llama-cli + eval harness on top of run.sh's image)"
 docker build --platform "$PLATFORM" --build-arg FORK_REF="$FORK_REF" -t "$IMAGE" .
 
-# tier -> GGUF filename already resolved by a prior ./run.sh (bench.sh is config.json-driven; eval.sh keeps a tier->file map for the smoke tiers)
-# macOS ships bash 3.2 (no associative arrays) — use a case statement, not declare -A.
-tier_file() {
-	case "$1" in
-	1.7b) echo "Ternary-Bonsai-1.7B-Q2_0.gguf" ;;
-	1.7b-1bit) echo "Bonsai-1.7B-Q1_0.gguf" ;;
-	4b) echo "Ternary-Bonsai-4B-Q2_0.gguf" ;;
-	4b-1bit) echo "Bonsai-4B-Q1_0.gguf" ;;
-	8b-1bit) echo "Bonsai-8B-Q1_0.gguf" ;;
-	27b-1bit) echo "Bonsai-27B-Q1_0.gguf" ;;
-	*) echo "" ;;
-	esac
-}
+# Mount eval/ read-only so the local eval.py / verify.py / summarize.py /
+# config.json / cases.jsonl run inside the container. The baked-in image copies
+# drift from the repo, the mount keeps them in sync without a rebuild for code
+# changes (a rebuild is still needed when the Dockerfile or deps change).
+echo "==> Running accuracy grid"
+echo "    config: $CONFIG"
+echo "    cases:  $CASES"
+echo "    captures: $CAPTURE_DIR"
+echo "    timeout: ${TIMEOUT}s per cell"
+echo
 
-for tier in $TIERS; do
-	f="$(tier_file "$tier")"
-	[[ -n "$f" ]] || {
-		echo "No known GGUF filename for tier '$tier' — add it to tier_file() in eval.sh"
-		exit 1
-	}
-	[[ -f "$MODELS_DIR/$f" ]] || {
-		echo "Model not downloaded yet: $f — run TIERS=\"$tier\" ./run.sh first"
-		exit 1
-	}
+docker run --rm --platform "$PLATFORM" \
+	-v "$MODELS_DIR:/models:ro" \
+	-v "$PWD/eval:/opt/eval:ro" \
+	-v "$CAPTURE_DIR:/reports/captures" \
+	-e PYTHONUNBUFFERED=1 \
+	--entrypoint python3 \
+	"$IMAGE" -u /opt/eval/eval.py \
+	--config /opt/eval/config.json \
+	--models-dir /models \
+	--cases /opt/eval/cases.jsonl \
+	--capture-dir /reports/captures \
+	--timeout "$TIMEOUT"
 
-	# Plain string + intentional word-splitting below, not an array: bash 3.2
-	# (macOS default) treats expanding an empty array under `set -u` as an
-	# unbound-variable error. Safe here since $THREADS is always a bare integer.
-	THREAD_FLAG=""
-	[[ -n "$THREADS" ]] && THREAD_FLAG="--threads $THREADS"
-
-	docker run --rm --platform "$PLATFORM" \
-		-v "$MODELS_DIR:/models" \
-		-e PYTHONUNBUFFERED=1 \
-		--entrypoint python3 \
-		"$IMAGE" -u /opt/eval/eval.py --model "/models/$f" --tier "$tier" --mode "$MODE" --temps "$TEMPS" $THREAD_FLAG
-done
+# eval.py auto-replays every capture at the end of the grid and exits nonzero
+# on a mismatch. Summarize the captures into a readable report on stdout.
+echo
+echo "==> Summary"
+docker run --rm --platform "$PLATFORM" \
+	-v "$PWD/eval:/opt/eval:ro" \
+	-v "$CAPTURE_DIR:/reports/captures:ro" \
+	--entrypoint python3 \
+	"$IMAGE" -u /opt/eval/summarize.py /reports/captures
