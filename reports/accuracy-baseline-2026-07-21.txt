@@ -1,0 +1,149 @@
+
+Baseline: accuracy eval grid, 2026-07-21. New baseline, NOT comparable to the
+scout (reports/00-results-2026-07-18.md is frozen) or to the invalid 2026-07-20
+run (which loaded the 1.7B for every model key, see commit 6aa6bfa).
+Grid: 3 models (1.7B/4B/8B Q1_0), 10 param sets total, 2 modes (direct, quote),
+5 reps, 5 cases (energy, ai_inference, health, no_citations, battery_storage).
+500 invocations, 0 timeouts. Auto-replay verified all 500 records (exact score
+equality). All 6 greedy (temp 0) sets deterministic across reps (30 cells, 0
+divergences). Per-tier template: 1.7B and 8B use embedded (--jinja -cnv), 4B
+uses raw (template breaks 4B output, per reports/r3-template-decision.md).
+TPS is real decode throughput parsed from llama-completion's stderr
+(common_perf_print), not estimated.
+
+============================================================================================
+  ACCURACY EVAL SUMMARY
+  captures: reports/captures
+  records: 500, groups: 20
+  metrics: recall and precision primary (fabrication is the failure class), F1 non-decision-grade
+============================================================================================
+  model mode    slug                                      recall    prec    cite  latency      tps  reps    std
+  ----------------------------------------------------------------------------------------
+  1.7B  direct  t0.0-tk20-tp0.9-rp1.0-pp0.5-s1             0.80    0.67     92%    4.3s    46.7     5   0.45
+  1.7B  direct  t0.5-tk20-tp0.9-rp1.0-pp0.5-s0             0.67    0.57     83%    4.0s    48.2     5   0.39
+  1.7B  direct  t0.5-tk20-tp0.9-rp1.0-pp0.5-s1             0.77    0.69     88%    4.1s    47.9     5   0.44
+  1.7B  direct  t0.7-tk40-tp0.85-rp1.0-pp0.5-s1            0.75    0.67     88%    3.9s    48.9     5   0.33
+  1.7B  quote   t0.0-tk20-tp0.9-rp1.0-pp0.5-s1             0.73    0.67    100%    6.0s    46.0     5   0.43
+  1.7B  quote   t0.5-tk20-tp0.9-rp1.0-pp0.5-s0             0.59    0.57     86%    4.8s    47.5     5   0.35
+  1.7B  quote   t0.5-tk20-tp0.9-rp1.0-pp0.5-s1             0.68    0.66     92%    5.4s    44.1     5   0.40
+  1.7B  quote   t0.7-tk40-tp0.85-rp1.0-pp0.5-s1            0.58    0.64     90%    4.7s    47.5     5   0.38
+  4B    direct  t0.0-tk20-tp0.9-rp1.0-pp0.0-s1             1.00    0.80    100%    6.7s    22.0     5   0.00
+  4B    direct  t0.5-tk20-tp0.9-rp1.0-pp0.0-s0             0.83    0.65    100%    6.6s    22.7     5   0.10
+  4B    direct  t0.5-tk20-tp0.9-rp1.0-pp0.0-s1             0.87    0.77    100%    6.5s    22.2     5   0.10
+  4B    quote   t0.0-tk20-tp0.9-rp1.0-pp0.0-s1             1.00    0.75    100%   11.2s    21.3     5   0.00
+  4B    quote   t0.5-tk20-tp0.9-rp1.0-pp0.0-s0             0.95    0.74     95%    9.2s    22.1     5   0.09
+  4B    quote   t0.5-tk20-tp0.9-rp1.0-pp0.0-s1             0.96    0.78     95%    9.2s    22.2     5   0.06
+  8B    direct  t0.0-tk20-tp0.9-rp1.0-pp0.0-s1             0.93    0.75    100%   10.7s    13.0     5   0.15
+  8B    direct  t0.5-tk20-tp0.9-rp1.0-pp0.0-s0             0.89    0.72     95%   10.7s    12.9     5   0.15
+  8B    direct  t0.5-tk20-tp0.9-rp1.0-pp0.0-s1             0.89    0.72     95%   10.5s    13.0     5   0.15
+  8B    quote   t0.0-tk20-tp0.9-rp1.0-pp0.0-s1             1.00    0.75    100%   17.0s    12.7     5   0.00
+  8B    quote   t0.5-tk20-tp0.9-rp1.0-pp0.0-s0             0.92    0.72    100%   17.7s    12.7     5   0.18
+  8B    quote   t0.5-tk20-tp0.9-rp1.0-pp0.0-s1             0.92    0.72    100%   17.7s    12.4     5   0.18
+
+  DETERMINISM (greedy / temp 0 sets)
+  all 30 greedy cells deterministic across reps (6 sets). 0 divergences.
+
+  APPENDIX: per-case detail (within-case variance across reps)
+  model mode    slug                              case               rec  rec_std  prec  prec_std   lat    tps reps
+  ----------------------------------------------------------------------------------------------------
+  1.7B  direct  t0.0-tk20-tp0.9-rp1.0-pp0.5-s1    ai_inference     1.00     0.00 0.75      0.00  4.7s   47.5    5
+  1.7B  direct  t0.0-tk20-tp0.9-rp1.0-pp0.5-s1    battery_storage  1.00     0.00 1.00      0.00  4.1s   45.1    5
+  1.7B  direct  t0.0-tk20-tp0.9-rp1.0-pp0.5-s1    energy           1.00     0.00 0.60      0.00  5.8s   45.4    5
+  1.7B  direct  t0.0-tk20-tp0.9-rp1.0-pp0.5-s1    health           1.00     0.00 1.00      0.00  3.2s   48.6    5
+  1.7B  direct  t0.0-tk20-tp0.9-rp1.0-pp0.5-s1    no_citations     0.00     0.00 0.00      0.00  3.8s   46.8    5
+  1.7B  direct  t0.5-tk20-tp0.9-rp1.0-pp0.5-s0    ai_inference     0.80     0.45 0.65      0.38  4.4s   49.3    5
+  1.7B  direct  t0.5-tk20-tp0.9-rp1.0-pp0.5-s0    battery_storage  0.73     0.43 0.80      0.45  3.5s   48.9    5
+  1.7B  direct  t0.5-tk20-tp0.9-rp1.0-pp0.5-s0    energy           1.00     0.00 0.60      0.00  6.1s   46.4    5
+  1.7B  direct  t0.5-tk20-tp0.9-rp1.0-pp0.5-s0    health           0.80     0.45 0.80      0.45  3.2s   45.4    5
+  1.7B  direct  t0.5-tk20-tp0.9-rp1.0-pp0.5-s0    no_citations     0.00     0.00 0.00      0.00  2.9s   51.2    5
+  1.7B  direct  t0.5-tk20-tp0.9-rp1.0-pp0.5-s1    ai_inference     1.00     0.00 0.85      0.14  4.5s   47.1    5
+  1.7B  direct  t0.5-tk20-tp0.9-rp1.0-pp0.5-s1    battery_storage  0.87     0.18 1.00      0.00  3.8s   47.7    5
+  1.7B  direct  t0.5-tk20-tp0.9-rp1.0-pp0.5-s1    energy           1.00     0.00 0.60      0.00  5.9s   47.1    5
+  1.7B  direct  t0.5-tk20-tp0.9-rp1.0-pp0.5-s1    health           1.00     0.00 1.00      0.00  3.1s   50.6    5
+  1.7B  direct  t0.5-tk20-tp0.9-rp1.0-pp0.5-s1    no_citations     0.00     0.00 0.00      0.00  3.3s   47.1    5
+  1.7B  direct  t0.7-tk40-tp0.85-rp1.0-pp0.5-s1   ai_inference     1.00     0.00 0.85      0.14  4.7s   48.7    5
+  1.7B  direct  t0.7-tk40-tp0.85-rp1.0-pp0.5-s1   battery_storage  0.73     0.37 1.00      0.00  3.7s   48.6    5
+  1.7B  direct  t0.7-tk40-tp0.85-rp1.0-pp0.5-s1   energy           0.80     0.45 0.48      0.27  5.4s   45.5    5
+  1.7B  direct  t0.7-tk40-tp0.85-rp1.0-pp0.5-s1   health           1.00     0.00 1.00      0.00  3.1s   49.5    5
+  1.7B  direct  t0.7-tk40-tp0.85-rp1.0-pp0.5-s1   no_citations     0.20     0.45 0.00      0.00  2.9s   52.4    5
+  1.7B  quote   t0.0-tk20-tp0.9-rp1.0-pp0.5-s1    ai_inference     1.00     0.00 0.75      0.00  6.8s   46.2    5
+  1.7B  quote   t0.0-tk20-tp0.9-rp1.0-pp0.5-s1    battery_storage  0.67     0.00 1.00      0.00  4.6s   46.3    5
+  1.7B  quote   t0.0-tk20-tp0.9-rp1.0-pp0.5-s1    energy           1.00     0.00 0.60      0.00  8.7s   45.1    5
+  1.7B  quote   t0.0-tk20-tp0.9-rp1.0-pp0.5-s1    health           1.00     0.00 1.00      0.00  4.6s   46.6    5
+  1.7B  quote   t0.0-tk20-tp0.9-rp1.0-pp0.5-s1    no_citations     0.00     0.00 0.00      0.00  5.1s   46.0    5
+  1.7B  quote   t0.5-tk20-tp0.9-rp1.0-pp0.5-s0    ai_inference     0.73     0.43 0.58      0.33  5.3s   48.2    5
+  1.7B  quote   t0.5-tk20-tp0.9-rp1.0-pp0.5-s0    battery_storage  0.87     0.30 1.00      0.00  5.6s   47.1    5
+  1.7B  quote   t0.5-tk20-tp0.9-rp1.0-pp0.5-s0    energy           0.53     0.38 0.49      0.28  5.5s   48.2    5
+  1.7B  quote   t0.5-tk20-tp0.9-rp1.0-pp0.5-s0    health           0.80     0.45 0.80      0.45  4.4s   44.5    5
+  1.7B  quote   t0.5-tk20-tp0.9-rp1.0-pp0.5-s0    no_citations     0.00     0.00 0.00      0.00  3.2s   49.6    5
+  1.7B  quote   t0.5-tk20-tp0.9-rp1.0-pp0.5-s1    ai_inference     0.93     0.15 0.73      0.04  5.9s   44.6    5
+  1.7B  quote   t0.5-tk20-tp0.9-rp1.0-pp0.5-s1    battery_storage  0.80     0.30 1.00      0.00  5.6s   43.0    5
+  1.7B  quote   t0.5-tk20-tp0.9-rp1.0-pp0.5-s1    energy           0.67     0.24 0.59      0.08  6.7s   44.1    5
+  1.7B  quote   t0.5-tk20-tp0.9-rp1.0-pp0.5-s1    health           1.00     0.00 1.00      0.00  4.9s   44.9    5
+  1.7B  quote   t0.5-tk20-tp0.9-rp1.0-pp0.5-s1    no_citations     0.00     0.00 0.00      0.00  4.2s   43.8    5
+  1.7B  quote   t0.7-tk40-tp0.85-rp1.0-pp0.5-s1   ai_inference     0.73     0.37 0.85      0.14  5.4s   47.1    5
+  1.7B  quote   t0.7-tk40-tp0.85-rp1.0-pp0.5-s1   battery_storage  0.87     0.30 1.00      0.00  5.5s   46.7    5
+  1.7B  quote   t0.7-tk40-tp0.85-rp1.0-pp0.5-s1   energy           0.40     0.43 0.35      0.33  4.8s   44.5    5
+  1.7B  quote   t0.7-tk40-tp0.85-rp1.0-pp0.5-s1   health           0.90     0.22 1.00      0.00  4.1s   49.2    5
+  1.7B  quote   t0.7-tk40-tp0.85-rp1.0-pp0.5-s1   no_citations     0.00     0.00 0.00      0.00  3.6s   50.1    5
+  4B    direct  t0.0-tk20-tp0.9-rp1.0-pp0.0-s1    ai_inference     1.00     0.00 1.00      0.00  7.5s   21.1    5
+  4B    direct  t0.0-tk20-tp0.9-rp1.0-pp0.0-s1    battery_storage  1.00     0.00 1.00      0.00  8.3s   22.0    5
+  4B    direct  t0.0-tk20-tp0.9-rp1.0-pp0.0-s1    energy           1.00     0.00 1.00      0.00  8.2s   20.7    5
+  4B    direct  t0.0-tk20-tp0.9-rp1.0-pp0.0-s1    health           1.00     0.00 1.00      0.00  6.3s   21.6    5
+  4B    direct  t0.0-tk20-tp0.9-rp1.0-pp0.0-s1    no_citations     1.00     0.00 0.00      0.00  2.9s   24.4    5
+  4B    direct  t0.5-tk20-tp0.9-rp1.0-pp0.0-s0    ai_inference     0.73     0.37 1.00      0.00  6.4s   22.6    5
+  4B    direct  t0.5-tk20-tp0.9-rp1.0-pp0.0-s0    battery_storage  0.80     0.45 0.80      0.45  7.9s   22.0    5
+  4B    direct  t0.5-tk20-tp0.9-rp1.0-pp0.0-s0    energy           0.80     0.45 0.65      0.38  9.9s   21.8    5
+  4B    direct  t0.5-tk20-tp0.9-rp1.0-pp0.0-s0    health           0.80     0.45 0.80      0.45  6.2s   22.5    5
+  4B    direct  t0.5-tk20-tp0.9-rp1.0-pp0.0-s0    no_citations     1.00     0.00 0.00      0.00  2.8s   24.5    5
+  4B    direct  t0.5-tk20-tp0.9-rp1.0-pp0.0-s1    ai_inference     0.73     0.37 1.00      0.00  6.6s   22.1    5
+  4B    direct  t0.5-tk20-tp0.9-rp1.0-pp0.0-s1    battery_storage  0.87     0.30 1.00      0.00  7.5s   21.5    5
+  4B    direct  t0.5-tk20-tp0.9-rp1.0-pp0.0-s1    energy           0.87     0.30 0.85      0.14  9.7s   21.4    5
+  4B    direct  t0.5-tk20-tp0.9-rp1.0-pp0.0-s1    health           0.90     0.22 1.00      0.00  6.1s   22.2    5
+  4B    direct  t0.5-tk20-tp0.9-rp1.0-pp0.0-s1    no_citations     1.00     0.00 0.00      0.00  2.8s   24.1    5
+  4B    quote   t0.0-tk20-tp0.9-rp1.0-pp0.0-s1    ai_inference     1.00     0.00 1.00      0.00 14.7s   21.2    5
+  4B    quote   t0.0-tk20-tp0.9-rp1.0-pp0.0-s1    battery_storage  1.00     0.00 1.00      0.00 12.9s   19.8    5
+  4B    quote   t0.0-tk20-tp0.9-rp1.0-pp0.0-s1    energy           1.00     0.00 0.75      0.00 16.0s   21.0    5
+  4B    quote   t0.0-tk20-tp0.9-rp1.0-pp0.0-s1    health           1.00     0.00 1.00      0.00  9.4s   21.5    5
+  4B    quote   t0.0-tk20-tp0.9-rp1.0-pp0.0-s1    no_citations     1.00     0.00 0.00      0.00  3.2s   23.0    5
+  4B    quote   t0.5-tk20-tp0.9-rp1.0-pp0.0-s0    ai_inference     0.80     0.45 0.80      0.45 10.7s   21.9    5
+  4B    quote   t0.5-tk20-tp0.9-rp1.0-pp0.0-s0    battery_storage  0.93     0.15 1.00      0.00 12.3s   21.6    5
+  4B    quote   t0.5-tk20-tp0.9-rp1.0-pp0.0-s0    energy           1.00     0.00 0.90      0.14 11.4s   22.0    5
+  4B    quote   t0.5-tk20-tp0.9-rp1.0-pp0.0-s0    health           1.00     0.00 1.00      0.00  8.8s   22.0    5
+  4B    quote   t0.5-tk20-tp0.9-rp1.0-pp0.0-s0    no_citations     1.00     0.00 0.00      0.00  3.1s   23.2    5
+  4B    quote   t0.5-tk20-tp0.9-rp1.0-pp0.0-s1    ai_inference     0.87     0.30 1.00      0.00 10.3s   21.7    5
+  4B    quote   t0.5-tk20-tp0.9-rp1.0-pp0.0-s1    battery_storage  0.93     0.15 1.00      0.00 12.2s   21.7    5
+  4B    quote   t0.5-tk20-tp0.9-rp1.0-pp0.0-s1    energy           1.00     0.00 0.90      0.14 11.8s   20.9    5
+  4B    quote   t0.5-tk20-tp0.9-rp1.0-pp0.0-s1    health           1.00     0.00 1.00      0.00  8.8s   22.3    5
+  4B    quote   t0.5-tk20-tp0.9-rp1.0-pp0.0-s1    no_citations     1.00     0.00 0.00      0.00  3.1s   24.6    5
+  8B    direct  t0.0-tk20-tp0.9-rp1.0-pp0.0-s1    ai_inference     0.67     0.00 1.00      0.00 10.1s   12.8    5
+  8B    direct  t0.0-tk20-tp0.9-rp1.0-pp0.0-s1    battery_storage  1.00     0.00 1.00      0.00 12.8s   12.6    5
+  8B    direct  t0.0-tk20-tp0.9-rp1.0-pp0.0-s1    energy           1.00     0.00 0.75      0.00 16.2s   12.3    5
+  8B    direct  t0.0-tk20-tp0.9-rp1.0-pp0.0-s1    health           1.00     0.00 1.00      0.00  9.4s   13.0    5
+  8B    direct  t0.0-tk20-tp0.9-rp1.0-pp0.0-s1    no_citations     1.00     0.00 0.00      0.00  4.8s   14.0    5
+  8B    direct  t0.5-tk20-tp0.9-rp1.0-pp0.0-s0    ai_inference     0.67     0.00 1.00      0.00 10.4s   12.6    5
+  8B    direct  t0.5-tk20-tp0.9-rp1.0-pp0.0-s0    battery_storage  1.00     0.00 1.00      0.00 12.8s   12.7    5
+  8B    direct  t0.5-tk20-tp0.9-rp1.0-pp0.0-s0    energy           0.80     0.45 0.60      0.34 14.9s   12.4    5
+  8B    direct  t0.5-tk20-tp0.9-rp1.0-pp0.0-s0    health           1.00     0.00 1.00      0.00 10.1s   13.0    5
+  8B    direct  t0.5-tk20-tp0.9-rp1.0-pp0.0-s0    no_citations     1.00     0.00 0.00      0.00  5.1s   13.9    5
+  8B    direct  t0.5-tk20-tp0.9-rp1.0-pp0.0-s1    ai_inference     0.67     0.00 1.00      0.00 10.1s   13.0    5
+  8B    direct  t0.5-tk20-tp0.9-rp1.0-pp0.0-s1    battery_storage  1.00     0.00 1.00      0.00 12.9s   12.7    5
+  8B    direct  t0.5-tk20-tp0.9-rp1.0-pp0.0-s1    energy           0.80     0.45 0.60      0.34 14.6s   12.7    5
+  8B    direct  t0.5-tk20-tp0.9-rp1.0-pp0.0-s1    health           1.00     0.00 1.00      0.00 10.2s   12.6    5
+  8B    direct  t0.5-tk20-tp0.9-rp1.0-pp0.0-s1    no_citations     1.00     0.00 0.00      0.00  4.8s   14.0    5
+  8B    quote   t0.0-tk20-tp0.9-rp1.0-pp0.0-s1    ai_inference     1.00     0.00 1.00      0.00 18.3s   12.4    5
+  8B    quote   t0.0-tk20-tp0.9-rp1.0-pp0.0-s1    battery_storage  1.00     0.00 1.00      0.00 20.5s   12.5    5
+  8B    quote   t0.0-tk20-tp0.9-rp1.0-pp0.0-s1    energy           1.00     0.00 0.75      0.00 25.1s   12.4    5
+  8B    quote   t0.0-tk20-tp0.9-rp1.0-pp0.0-s1    health           1.00     0.00 1.00      0.00 15.6s   12.1    5
+  8B    quote   t0.0-tk20-tp0.9-rp1.0-pp0.0-s1    no_citations     1.00     0.00 0.00      0.00  5.4s   14.2    5
+  8B    quote   t0.5-tk20-tp0.9-rp1.0-pp0.0-s0    ai_inference     1.00     0.00 0.90      0.14 20.1s   12.4    5
+  8B    quote   t0.5-tk20-tp0.9-rp1.0-pp0.0-s0    battery_storage  1.00     0.00 1.00      0.00 20.7s   12.4    5
+  8B    quote   t0.5-tk20-tp0.9-rp1.0-pp0.0-s0    energy           1.00     0.00 0.72      0.07 24.4s   12.5    5
+  8B    quote   t0.5-tk20-tp0.9-rp1.0-pp0.0-s0    health           1.00     0.00 1.00      0.00 14.5s   12.6    5
+  8B    quote   t0.5-tk20-tp0.9-rp1.0-pp0.0-s0    no_citations     0.60     0.55 0.00      0.00  8.8s   13.6    5
+  8B    quote   t0.5-tk20-tp0.9-rp1.0-pp0.0-s1    ai_inference     1.00     0.00 0.90      0.14 19.8s   12.3    5
+  8B    quote   t0.5-tk20-tp0.9-rp1.0-pp0.0-s1    battery_storage  1.00     0.00 1.00      0.00 19.7s   12.4    5
+  8B    quote   t0.5-tk20-tp0.9-rp1.0-pp0.0-s1    energy           1.00     0.00 0.72      0.07 24.7s   12.3    5
+  8B    quote   t0.5-tk20-tp0.9-rp1.0-pp0.0-s1    health           1.00     0.00 1.00      0.00 14.3s   12.6    5
+  8B    quote   t0.5-tk20-tp0.9-rp1.0-pp0.0-s1    no_citations     0.60     0.55 0.00      0.00 10.2s   12.1    5
+
