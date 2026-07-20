@@ -120,13 +120,15 @@ def resolve_ref_from_quote(quote, doc, cutoff=0.85):
 
 
 def score_case(predicted, expected, mode, doc):
-    base = {"valid_json": False, "recall": 0.0, "citation_acc": None,
-            "matched": 0, "expected_n": len(expected), "quote_match": None}
+    base = {"valid_json": False, "recall": 0.0, "precision": 0.0,
+            "citation_acc": None, "matched": 0, "expected_n": len(expected),
+            "quote_match": None, "f1": 0.0}
     if predicted is None or not isinstance(predicted, list):
         return base
     if not expected:
-        return {**base, "valid_json": True,
-                "recall": 1.0 if len(predicted) == 0 else 0.0}
+        recall = 1.0 if len(predicted) == 0 else 0.0
+        return {**base, "valid_json": True, "recall": recall,
+                "precision": 0.0, "f1": 0.0}
 
     # Resolve each prediction to a source_ref (differs per architecture).
     resolved, quote_hits = [], 0
@@ -141,24 +143,49 @@ def score_case(predicted, expected, mode, doc):
             ref = str(p.get("source_ref", "")).strip()
         resolved.append((claim, ref))
 
-    matched, citation_correct = 0, 0
-    for exp in expected:
+    # Greedy one-to-one assignment between expected and resolved predictions.
+    # Each expected and each prediction used at most once. Pairs below 0.5
+    # similarity never assign. Sort by similarity descending, assign in that
+    # order skipping any side already used. Python's sort is stable, so ties
+    # break in expected-then-prediction iteration order.
+    candidates = []
+    for ei, exp in enumerate(expected):
         key = exp["key_phrase"].lower()
-        hit, ref_ok = False, False
-        for claim, ref in resolved:
+        for pi, (claim, ref) in enumerate(resolved):
             c = claim.lower()
-            if key in c or difflib.SequenceMatcher(None, key, c).ratio() > 0.5:
-                hit = True
-                if ref == exp["source_ref"]:
-                    ref_ok = True
-        matched += hit
-        citation_correct += ref_ok
+            if key in c:
+                sim = 1.0
+            else:
+                sim = difflib.SequenceMatcher(None, key, c).ratio()
+            if sim >= 0.5:
+                candidates.append((sim, ei, pi, ref))
+    candidates.sort(key=lambda t: -t[0])
+
+    used_exp, used_pred = set(), set()
+    assigned, citation_correct = 0, 0
+    for sim, ei, pi, ref in candidates:
+        if ei in used_exp or pi in used_pred:
+            continue
+        used_exp.add(ei)
+        used_pred.add(pi)
+        assigned += 1
+        if ref == expected[ei]["source_ref"]:
+            citation_correct += 1
+
+    n_pred = len(predicted)
+    recall = assigned / len(expected)
+    precision = (assigned / n_pred) if n_pred else 0.0
+    citation_acc = (citation_correct / assigned) if assigned else 0.0
+    f1 = (2 * precision * recall / (precision + recall)) \
+        if (precision + recall) > 0 else 0.0
 
     return {"valid_json": True,
-            "recall": matched / len(expected),
-            "citation_acc": (citation_correct / matched) if matched else 0.0,
-            "matched": matched, "expected_n": len(expected),
-            "quote_match": (quote_hits / len(resolved)) if (mode == "quote" and resolved) else None}
+            "recall": recall,
+            "precision": precision,
+            "citation_acc": citation_acc,
+            "matched": assigned, "expected_n": len(expected),
+            "quote_match": (quote_hits / len(resolved)) if (mode == "quote" and resolved) else None,
+            "f1": f1}
 
 
 def main():
@@ -218,16 +245,19 @@ def main():
                     dt = time.time() - t0
                 except subprocess.TimeoutExpired:
                     dt = args.timeout
-                    s = {"valid_json": False, "recall": 0.0, "citation_acc": None,
+                    s = {"valid_json": False, "recall": 0.0, "precision": 0.0,
+                         "citation_acc": None,
                          "matched": 0, "expected_n": len(case["expected"]),
-                         "quote_match": None, "timed_out": True}
+                         "quote_match": None, "f1": 0.0, "timed_out": True}
                 s["id"], s["seconds"] = case["id"], round(dt, 1)
                 results.append(s)
                 cite = f"{s['citation_acc']:.0%}" if s.get("citation_acc") is not None else " n/a"
                 qm = f"  quote_match={s['quote_match']:.0%}" if s.get("quote_match") is not None else ""
+                f1 = f"  f1={s['f1']:.0%}" if s['valid_json'] else ""
                 flag = "  TIMEOUT" if s.get("timed_out") else ""
                 print(f"  {s['id']:<16} json={str(s['valid_json']):<5} recall={s['recall']:>4.0%}  "
-                      f"cite_acc={cite:>4}  ({s['matched']}/{s['expected_n']}, {s['seconds']}s){qm}{flag}",
+                      f"precision={s['precision']:>4.0%}  cite_acc={cite:>4}  "
+                      f"({s['matched']}/{s['expected_n']}, {s['seconds']}s){qm}{f1}{flag}",
                       flush=True)
 
             n = len(results)
@@ -237,18 +267,19 @@ def main():
                 "temp": temp, "mode": mode,
                 "json": sum(r["valid_json"] for r in results) / n,
                 "recall": sum(r["recall"] for r in results) / n,
+                "precision": sum(r["precision"] for r in results) / n,
                 "cite": (sum(cites) / len(cites)) if cites else None,
                 "quote": (sum(qms) / len(qms)) if qms else None,
                 "secs": sum(r["seconds"] for r in results) / n,
             }
 
-    print(f"\n{'='*74}\n  {label} >> architecture x temperature\n{'='*74}")
-    print(f"  {'mode':<8}{'temp':>6}{'valid_json':>12}{'recall':>10}{'cite_acc':>11}{'quote_hit':>11}{'avg_s':>8}")
-    print("  " + "-" * 66)
+    print(f"\n{'='*84}\n  {label} >> architecture x temperature\n{'='*84}")
+    print(f"  {'mode':<8}{'temp':>6}{'valid_json':>12}{'recall':>10}{'precision':>11}{'cite_acc':>11}{'quote_hit':>11}{'avg_s':>8}")
+    print("  " + "-" * 77)
     for key, v in summary.items():
         cite = f"{v['cite']:.0%}" if v["cite"] is not None else "n/a"
         quote = f"{v['quote']:.0%}" if v["quote"] is not None else "-"
-        print(f"  {v['mode']:<8}{v['temp']:>6.1f}{v['json']:>11.0%}{v['recall']:>10.0%}{cite:>11}{quote:>11}{v['secs']:>7.1f}s")
+        print(f"  {v['mode']:<8}{v['temp']:>6.1f}{v['json']:>12.0%}{v['recall']:>10.0%}{v['precision']:>11.0%}{cite:>11}{quote:>11}{v['secs']:>7.1f}s")
 
     # Per temperature, direct-vs-quote delta (only when both modes ran at that temp).
     for temp in temps:
