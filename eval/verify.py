@@ -401,6 +401,48 @@ def self_test():
     assert "--json-schema" not in cmd_f, \
         "strict=False: --json-schema should be absent"
 
+    # ================================================================ Timing
+    # _parse_timing extracts real TPS from llama-completion's stderr and never
+    # raises. Tests cover the happy path and every fallback case: empty stderr,
+    # missing lines, malformed numbers, a future fork format change. The grid
+    # must keep running with None TPS on a parse failure, never crash.
+    real_stderr = (
+        "0.06.410.573 I common_perf_print: prompt eval time =     217.93 ms /    13 tokens (   16.76 ms per token,    59.65 tokens per second)\n"
+        "0.06.410.574 I common_perf_print:        eval time =    2549.33 ms /     9 runs   (  283.26 ms per token,     3.53 tokens per second)\n"
+    )
+    t = ev._parse_timing(real_stderr)
+    assert t["prefill_tps"] is not None and t["prefill_tps"] > 0, \
+        f"prefill_tps should parse to a positive number, got {t['prefill_tps']!r}"
+    assert t["decode_tps"] is not None and t["decode_tps"] > 0, \
+        f"decode_tps should parse to a positive number, got {t['decode_tps']!r}"
+    assert t["prompt_tokens"] == 13, f"prompt_tokens: got {t['prompt_tokens']!r}"
+    assert t["decode_tokens"] == 9, f"decode_tokens: got {t['decode_tokens']!r}"
+
+    # Fallbacks: each must return a dict with all four keys set to None, and
+    # never raise.
+    for bad in ("", None, "no timing lines here at all",
+                "prompt eval time = ms / 13 tokens (garbage, not a number)",
+                "eval time = abc ms / 9 runs (no tps field)",
+                "\x00\x01\x02 binary garbage \x03"):
+        got = ev._parse_timing(bad)
+        assert isinstance(got, dict), \
+            f"parse_timing({bad!r}) returned non-dict {got!r}"
+        assert set(got.keys()) == {"prefill_tps", "prompt_tokens",
+                                   "decode_tps", "decode_tokens"}, \
+            f"parse_timing({bad!r}) returned wrong keys {set(got.keys())}"
+        # Happy-path fields must not leak into fallback results.
+        assert got["prefill_tps"] is None and got["decode_tps"] is None, \
+            f"parse_timing({bad!r}) should yield None tps, got {got!r}"
+
+    # Partial: prompt line present, decode line missing. Must return the
+    # prompt fields and None for decode, not crash.
+    partial = "prompt eval time = 100.0 ms / 10 tokens (10.0 ms per token, 100.0 tokens per second)"
+    pt = ev._parse_timing(partial)
+    assert pt["prefill_tps"] is not None and pt["prompt_tokens"] == 10, \
+        f"partial: prompt fields should parse, got {pt!r}"
+    assert pt["decode_tps"] is None and pt["decode_tokens"] is None, \
+        f"partial: decode fields should be None, got {pt!r}"
+
     # ================================================================ Step 5
     # Capture round-trip: build_record and capture_path produce valid JSONL
     # that reads back with all required fields. 2 cases x 2 reps = 4 records.

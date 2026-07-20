@@ -339,6 +339,51 @@ def _build_cmd(binary, model, prompt, threads, ctx, max_tokens, sample,
     return cmd
 
 
+# Timing lines emitted by llama-completion on stderr (common_perf_print).
+# prompt eval time = prefill; eval time = decode (generation). The decode TPS
+# is the number users mean by "how fast does the model generate". The regexes
+# are lenient on whitespace (the fork pads numbers variably) and never raise:
+# any parse failure yields None for that field, so a format change in a future
+# fork build degrades to missing TPS, never a crash.
+_PROMPT_TIMING_RE = re.compile(
+    r"prompt eval time\s*=\s*[\d.]+\s*ms\s*/\s*(\d+)\s*tokens?\s*"
+    r"\(\s*[\d.]+\s*ms per token,\s*([\d.]+)\s*tokens per second\)")
+_DECODE_TIMING_RE = re.compile(
+    r"\beval time\s*=\s*[\d.]+\s*ms\s*/\s*(\d+)\s*runs?\s*"
+    r"\(\s*[\d.]+\s*ms per token,\s*([\d.]+)\s*tokens per second\)")
+
+
+def _parse_timing(stderr):
+    """Parse llama-completion's common_perf_print lines from stderr into a
+    timing dict: {prefill_tps, prompt_tokens, decode_tps, decode_tokens}.
+
+    Never raises. Any field not found is None, so a stderr format change or a
+    truncated capture degrades to missing TPS rather than crashing the grid.
+    The decode TPS is the generation throughput, the primary speed metric for
+    the per-case line and summary."""
+    # Typed so the float/int reassignments below do not trip the type checker
+    # narrowing the dict values to None.
+    result: dict[str, float | int | None] = {
+        "prefill_tps": None, "prompt_tokens": None,
+        "decode_tps": None, "decode_tokens": None,
+    }
+    if not stderr:
+        return result
+    try:
+        m = _PROMPT_TIMING_RE.search(stderr)
+        if m:
+            result["prompt_tokens"] = int(m.group(1))
+            result["prefill_tps"] = float(m.group(2))
+        m = _DECODE_TIMING_RE.search(stderr)
+        if m:
+            result["decode_tokens"] = int(m.group(1))
+            result["decode_tps"] = float(m.group(2))
+    except (ValueError, AttributeError):
+        # int/float conversion or match group access failed; keep the Nones.
+        pass
+    return result
+
+
 def run_model(binary, model, prompt, threads, ctx, max_tokens, timeout, sample,
              template="", strict_schema_validation=True, mode=None):
     """One-shot completion. Uses llama-completion, NOT llama-cli: in this fork
@@ -368,7 +413,10 @@ def run_model(binary, model, prompt, threads, ctx, max_tokens, timeout, sample,
                     template, strict_schema_validation, mode)
     r = subprocess.run(cmd, capture_output=True, text=True,
                        timeout=timeout, stdin=subprocess.DEVNULL)
-    return r.stdout
+    # Parse real TPS from llama-completion's stderr (common_perf_print). The
+    # decode TPS is the generation throughput, the primary speed metric.
+    timing = _parse_timing(r.stderr)
+    return r.stdout, timing
 
 
 def extract_json_array(raw):
@@ -427,10 +475,12 @@ def capture_path(capture_dir, model, mode, slug):
 
 
 def build_record(model, mode, slug, cell_config, case, rep, raw_output, score,
-                 seconds, scored):
+                 seconds, scored, timing=None):
     """Construct one capture record dict. cell_config carries temp, top_k,
     top_p, repeat_penalty, presence_penalty, strict_schema_validation,
-    template, seed, threads."""
+    template, seed, threads. timing carries prefill_tps, prompt_tokens,
+    decode_tps, decode_tokens parsed from llama-completion's stderr (None when
+    not captured, e.g. a timeout)."""
     return {
         "model": model,
         "mode": mode,
@@ -444,6 +494,7 @@ def build_record(model, mode, slug, cell_config, case, rep, raw_output, score,
         "score": score,
         "seconds": seconds,
         "scored": scored,
+        "timing": timing or {},
     }
 
 
@@ -574,9 +625,10 @@ def main():
         with open(cap, "a") as cf:
             for case in cases:
                 t0 = time.time()
+                timing = {}
                 try:
                     prompt = template.format(doc=case["text"])
-                    raw = run_model(args.binary, model_path, prompt,
+                    raw, timing = run_model(args.binary, model_path, prompt,
                                     threads, args.ctx, args.max_tokens,
                                     timeout, sample,
                                     template=s["template"],
@@ -596,16 +648,18 @@ def main():
                              "quote_match": None, "f1": 0.0}
                     scored = False
                 rec = build_record(model_key, mode, slug, cell_config, case,
-                                   rep, raw, score, dt, scored)
+                                   rep, raw, score, dt, scored, timing)
                 cf.write(json.dumps(rec) + "\n")
                 cf.flush()
                 cite = f"{score['citation_acc']:.0%}" if score.get("citation_acc") is not None else " n/a"
                 qm = f"  quote_match={score['quote_match']:.0%}" if score.get("quote_match") is not None else ""
                 f1 = f"  f1={score['f1']:.0%}" if score['valid_json'] else ""
+                tps = timing.get("decode_tps")
+                tps_s = f"  {tps:.1f} tok/s" if tps is not None else ""
                 flag = "  TIMEOUT" if not scored else ""
                 print(f"  {case['id']:<16} json={str(score['valid_json']):<5} recall={score['recall']:>4.0%}  "
                       f"precision={score['precision']:>4.0%}  cite_acc={cite:>4}  "
-                      f"({score['matched']}/{score['expected_n']}, {dt}s){qm}{f1}{flag}",
+                      f"({score['matched']}/{score['expected_n']}, {dt}s){qm}{tps_s}{f1}{flag}",
                       flush=True)
 
     # Step 6: deterministic replay. verify.py imports eval (import eval as ev),
