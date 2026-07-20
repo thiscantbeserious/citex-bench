@@ -195,7 +195,8 @@ DOCUMENT:
 JSON:"""
 
 
-def run_model(binary, model, prompt, threads, ctx, max_tokens, timeout, sample):
+def run_model(binary, model, prompt, threads, ctx, max_tokens, timeout, sample,
+             template=""):
     """One-shot completion. Uses llama-completion, NOT llama-cli: in this fork
     llama-cli is an interactive REPL that rejects -no-cnv and spins forever on
     EOF stdin (~1GB of "> " prompts, then OOM).
@@ -203,7 +204,16 @@ def run_model(binary, model, prompt, threads, ctx, max_tokens, timeout, sample):
     `sample` carries the full Bonsai-recommended sampling config, because the
     model card tunes temperature together with top-k/top-p/penalties, sweeping
     temperature in isolation at temp>0 is off-spec. At temp=0 (greedy) the
-    sampler short-circuits and top-k/top-p are inert, which is fine."""
+    sampler short-circuits and top-k/top-p are inert, which is fine.
+
+    `template` controls chat-template application:
+      ""        raw -p prompt, no template (current behavior).
+      "embedded"  apply the model's embedded chat template via --jinja -cnv.
+                  --jinja enables the Jinja engine, -cnv enables conversation
+                  mode so -p is treated as a user turn with add_generation_prompt.
+      <path>    use a custom jinja template file via --jinja --chat-template-file
+                <path> -cnv.
+    Flags confirmed via `llama-completion --help` on bonsai-floor:prism."""
     cmd = [binary, "-m", model, "-p", prompt, "-n", str(max_tokens),
            "-t", str(threads), "-c", str(ctx), "-ngl", "0",
            "--temp", str(sample["temp"]),
@@ -212,6 +222,10 @@ def run_model(binary, model, prompt, threads, ctx, max_tokens, timeout, sample):
            "--repeat-penalty", str(sample["repeat_penalty"]),
            "--presence-penalty", str(sample["presence_penalty"]),
            "--seed", str(sample["seed"])]
+    if template == "embedded":
+        cmd += ["--jinja", "-cnv"]
+    elif template:
+        cmd += ["--jinja", "--chat-template-file", template, "-cnv"]
     r = subprocess.run(cmd, capture_output=True, text=True,
                        timeout=timeout, stdin=subprocess.DEVNULL)
     return r.stdout
@@ -355,6 +369,13 @@ def main():
     ap.add_argument("--repeat-penalty", type=float, default=1.0)
     ap.add_argument("--presence-penalty", type=float, default=0.0)
     ap.add_argument("--seed", type=int, default=0)
+    ap.add_argument("--template", default="",
+                   help="chat template: '' raw, 'embedded' use model's built-in "
+                        "template via --jinja, or a path to a jinja template file")
+    # Step 3 fallback: /no_think in the user message suppresses Qwen3 reasoning,
+    # applied identically to every tier alongside the embedded template.
+    ap.add_argument("--no-think", action="store_true",
+                   help="append /no_think to the prompt (Step 3 fallback)")
     args = ap.parse_args()
 
     # The 1.7B card specifically calls for a presence penalty. Apply one unless the
@@ -378,15 +399,22 @@ def main():
         for mode in modes:
             template = PROMPT_QUOTE if mode == "quote" else PROMPT_DIRECT
             print(f"\n=== {label}  [{mode}]  temp={temp} top-k={args.top_k} top-p={args.top_p} "
-                  f"rep={args.repeat_penalty} presence={presence} seed={args.seed} ===", flush=True)
+                  f"rep={args.repeat_penalty} presence={presence} seed={args.seed} "
+                  f"template={args.template or 'raw'} no_think={args.no_think} ===", flush=True)
             results = []
             for case in cases:
                 t0 = time.time()
                 try:
+                    prompt = template.format(doc=case["text"])
+                    # Qwen3 reads /no_think as a final user-turn line, so append
+                    # it after the "JSON:" cue to suppress reasoning preamble.
+                    if args.no_think:
+                        prompt = prompt + "\n/no_think"
                     raw = run_model(args.binary, args.model,
-                                    template.format(doc=case["text"]),
+                                    prompt,
                                     args.threads, args.ctx, args.max_tokens,
-                                    args.timeout, sample)
+                                    args.timeout, sample,
+                                    template=args.template)
                     s = score_case(extract_json_array(raw), case["expected"], mode, case["text"])
                     dt = time.time() - t0
                 except subprocess.TimeoutExpired:

@@ -197,6 +197,20 @@ def self_test():
                 f"resolved_file: expected Bonsai-1.7B-Q1_0.gguf, got {cell17['resolved_file']}"
         finally:
             shutil.rmtree(tmpdir)
+
+        # 8. Per-set template override (Step 3 per-tier decision). The real
+        #    config has defaults.template="embedded". 1.7B and 8B sets inherit
+        #    it. 4B sets override to "" (raw) because the embedded template
+        #    corrupts 4B output.
+        for cell in cfg["cells"]:
+            model = cell["model"]
+            tmpl = cell["set"]["template"]
+            if "4B" in model:
+                assert tmpl == "", \
+                    f"4B set {cell['slug']} template: expected '' (raw override), got {tmpl!r}"
+            else:
+                assert tmpl == "embedded", \
+                    f"{model} set {cell['slug']} template: expected 'embedded' (inherited), got {tmpl!r}"
     finally:
         for p in _tmp_config_paths:
             try:

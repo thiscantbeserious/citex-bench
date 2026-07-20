@@ -11,7 +11,7 @@
     "top_p": 0.9,
     "presence_penalty": 0.0,
     "strict_schema_validation": true,
-    "template": ""
+    "template": "embedded"
   },
   "models": {
     "prism-ml/Bonsai-1.7B-gguf:Q1_0": [
@@ -21,9 +21,9 @@
       {"temp": 0.5, "presence_penalty": 0.5, "strict_schema_validation": false}
     ],
     "prism-ml/Bonsai-4B-gguf:Q1_0": [
-      {"temp": 0.0},
-      {"temp": 0.5},
-      {"temp": 0.5, "strict_schema_validation": false}
+      {"temp": 0.0, "template": ""},
+      {"temp": 0.5, "template": ""},
+      {"temp": 0.5, "strict_schema_validation": false, "template": ""}
     ],
     "prism-ml/Bonsai-8B-gguf:Q1_0": [
       {"temp": 0.0},

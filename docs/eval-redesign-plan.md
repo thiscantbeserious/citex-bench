@@ -85,6 +85,7 @@ Precision is primary (fabrication is the failure). F1 is a labeled
 non-decision-grade convenience column, no conclusion from it alone.
 
 Normative self-test fixtures (the implementer builds tests around these):
+
 - Hallucination: doc `"Per a report [1], X happened. Per a study [2], Y
   happened."`, 2 expected, 5 predictions with 2 correct. New scorer gives
   precision 0.4, recall 1.0.
@@ -175,28 +176,37 @@ resolve path unchanged. Run budget is 100 runs of 5 cases (1.7B 4 sets, 4B 3,
 8B 3, at 2 modes 5 reps). 8B stays at 3 sets. If 8B time is tight later, drop
 its `strict_schema_validation: false` set first, never drop 4B.
 
-## Step 3, R3, template-vs-raw, global, smoke-gated
+## Step 3, R3, template-vs-raw, per-tier, smoke-gated
 
 Scope: `eval/eval.py::run_model`, `defaults.template` in config, a decision
 record under `reports/`.
 
 `run_model` feeds a raw `-p` prompt to thinking-capable Qwen3 models with no
 chat template, every tier. The 8B reasoning preamble is the untemplated
-behavior, not a quirk. The decision is global, one path for every tier.
+behavior, not a quirk. The decision is per-tier: no single template path works
+for all three tiers.
 
-Primary path: chat template via `--jinja` with the model's embedded template,
-all tiers. Fallback (only if the primary regresses 1.7B/4B or fails to
-unblock 8B): few-shot in the prompt, or `/no_think` in the prompt. Whichever
-path applies to every tier identically.
+Primary path: chat template via `--jinja` with the model's embedded template.
+`defaults.template` is `"embedded"`, the majority path that works for 1.7B and
+8B. The 4B model is the sole exception: its embedded template corrupts JSON
+output (recall drops to 0), so each of its param sets overrides `template` to
+`""` (raw). The `/no_think` flag stays implemented but is not enabled by
+default, it did not change outcomes in the smoke.
+
+Note: the global-path assumption (one path for every tier identically) was
+empirically falsified by the smoke. Per-set `template` overrides are used
+because `template` is in `_SAMPLABLE_KEYS` and the loader already supports
+per-set overrides.
 
 `defaults.template` values: `""` raw, `"embedded"` use `--jinja` with the
-model template, or a path to a jinja file. The smoke decides which.
+model template, or a path to a jinja file.
 
 Smoke: 1 case per tier, temp 0, direct mode, template-on vs template-off.
 Compare valid_json and recall for 1.7B and 4B, and whether 8B produces
 nonempty JSON with template on.
 
 Decision rule:
+
 - Template-on does not regress 1.7B/4B and unblocks 8B: set
   `defaults.template: "embedded"`.
 - Otherwise: implement the fallback, rerun the smoke, record that.
@@ -204,9 +214,10 @@ Decision rule:
   unresolved 8B prompt. Surface to the user.
 
 Done: verifiers clean, `reports/r3-template-decision.md` holds the smoke lines
-and the explicit decision, `defaults.template` in config matches it. The 8B
-raw opt-out sets keep `strict_schema_validation: false` as a
-template-independent failure data point.
+and the explicit decision, `defaults.template` in config matches it. The 4B
+sets override `template` to `""`. The 8B raw opt-out sets keep
+`strict_schema_validation: false` as a template-independent failure data
+point.
 
 ## Step 4, R4, schema-validated JSON, default-on
 
