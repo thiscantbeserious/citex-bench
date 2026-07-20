@@ -1,0 +1,703 @@
+=== Grid run started Mon Jul 20 20:59:08 CEST 2026 ===
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [direct] t0.0-tk20-tp0.9-rp1.0-pp0.5-s1 rep=0 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.3s)  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc= 67%  (3/3, 2.8s)  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 1.9s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.2s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 2.4s)  f1=100%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [direct] t0.0-tk20-tp0.9-rp1.0-pp0.5-s1 rep=1 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.3s)  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc= 67%  (3/3, 2.8s)  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.0s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.2s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 2.6s)  f1=100%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [direct] t0.0-tk20-tp0.9-rp1.0-pp0.5-s1 rep=2 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.3s)  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc= 67%  (3/3, 2.9s)  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.0s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.3s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 2.7s)  f1=100%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [direct] t0.0-tk20-tp0.9-rp1.0-pp0.5-s1 rep=3 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.4s)  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc= 67%  (3/3, 3.0s)  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.0s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.3s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 2.4s)  f1=100%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [direct] t0.0-tk20-tp0.9-rp1.0-pp0.5-s1 rep=4 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.7s)  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc= 67%  (3/3, 3.1s)  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.2s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.3s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 2.5s)  f1=100%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [quote] t0.0-tk20-tp0.9-rp1.0-pp0.5-s1 rep=0 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 4.9s)  quote_match=100%  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 4.0s)  quote_match=100%  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.8s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 3.0s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.7s)  quote_match=100%  f1=80%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [quote] t0.0-tk20-tp0.9-rp1.0-pp0.5-s1 rep=1 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 5.2s)  quote_match=100%  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 4.2s)  quote_match=100%  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 3.0s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 3.1s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.8s)  quote_match=100%  f1=80%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [quote] t0.0-tk20-tp0.9-rp1.0-pp0.5-s1 rep=2 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 4.9s)  quote_match=100%  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 3.9s)  quote_match=100%  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.8s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 3.0s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.7s)  quote_match=100%  f1=80%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [quote] t0.0-tk20-tp0.9-rp1.0-pp0.5-s1 rep=3 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 4.9s)  quote_match=100%  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 4.1s)  quote_match=100%  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.8s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 3.0s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.7s)  quote_match=100%  f1=80%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [quote] t0.0-tk20-tp0.9-rp1.0-pp0.5-s1 rep=4 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 4.8s)  quote_match=100%  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 4.0s)  quote_match=100%  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.9s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.9s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.7s)  quote_match=100%  f1=80%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.5-s1 rep=0 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.5s)  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc= 67%  (3/3, 2.8s)  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.1s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.6s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 2.4s)  f1=100%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.5-s1 rep=1 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.0s)  f1=75%
+  ai_inference     json=True  recall=100%  precision=100%  cite_acc= 67%  (3/3, 2.5s)  f1=100%
+  health           json=True  recall=100%  precision=100%  cite_acc= 50%  (2/2, 1.9s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.2s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.1s)  f1=80%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.5-s1 rep=2 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.7s)  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 3.2s)  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.1s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.5s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 2.8s)  f1=100%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.5-s1 rep=3 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.8s)  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc= 67%  (3/3, 3.0s)  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.0s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.3s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 2.4s)  f1=100%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.5-s1 rep=4 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.4s)  f1=75%
+  ai_inference     json=True  recall=100%  precision=100%  cite_acc= 67%  (3/3, 2.5s)  f1=100%
+  health           json=True  recall=100%  precision=100%  cite_acc= 50%  (2/2, 1.9s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.3s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.0s)  f1=80%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.5-s1 rep=0 ===
+  energy           json=True  recall= 33%  precision= 50%  cite_acc=100%  (1/3, 2.7s)  quote_match=100%  f1=40%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 4.3s)  quote_match=100%  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.7s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.8s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 3.5s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.5-s1 rep=1 ===
+  energy           json=True  recall= 67%  precision= 50%  cite_acc=100%  (2/3, 4.3s)  quote_match=100%  f1=57%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=  0%  (3/3, 2.8s)  quote_match=0%  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 3.0s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 3.9s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 4.0s)  quote_match=100%  f1=80%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.5-s1 rep=2 ===
+  energy           json=True  recall= 67%  precision= 67%  cite_acc=100%  (2/3, 4.8s)  quote_match=100%  f1=67%
+  ai_inference     json=True  recall= 67%  precision= 67%  cite_acc=100%  (2/3, 4.3s)  quote_match=100%  f1=67%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 4.3s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.1s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 4.0s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.5-s1 rep=3 ===
+  energy           json=True  recall= 67%  precision= 67%  cite_acc=100%  (2/3, 3.6s)  quote_match=100%  f1=67%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 4.5s)  quote_match=100%  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.9s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.9s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 4.1s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.5-s1 rep=4 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 5.3s)  quote_match=100%  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc= 33%  (3/3, 3.2s)  quote_match=25%  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 3.0s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.0s)  f1=0%
+  battery_storage  json=True  recall= 33%  precision=100%  cite_acc=100%  (1/3, 2.2s)  quote_match=100%  f1=50%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [direct] t0.7-tk40-tp0.85-rp1.0-pp0.5-s1 rep=0 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.8s)  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 3.3s)  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.2s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.3s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 2.8s)  f1=100%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [direct] t0.7-tk40-tp0.85-rp1.0-pp0.5-s1 rep=1 ===
+  energy           json=True  recall=  0%  precision=  0%  cite_acc=  0%  (0/3, 1.5s)  f1=0%
+  ai_inference     json=True  recall=100%  precision=100%  cite_acc= 67%  (3/3, 2.7s)  f1=100%
+  health           json=True  recall=100%  precision=100%  cite_acc= 50%  (2/2, 1.9s)  f1=100%
+  no_citations     json=True  recall=100%  precision=  0%  cite_acc= n/a  (0/0, 1.0s)  f1=0%
+  battery_storage  json=True  recall= 33%  precision=100%  cite_acc=100%  (1/3, 1.7s)  f1=50%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [direct] t0.7-tk40-tp0.85-rp1.0-pp0.5-s1 rep=2 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.8s)  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 3.2s)  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.2s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.6s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 2.8s)  f1=100%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [direct] t0.7-tk40-tp0.85-rp1.0-pp0.5-s1 rep=3 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.7s)  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 3.3s)  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.2s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.5s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 2.9s)  f1=100%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [direct] t0.7-tk40-tp0.85-rp1.0-pp0.5-s1 rep=4 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc= 67%  (3/3, 3.3s)  f1=75%
+  ai_inference     json=True  recall=100%  precision=100%  cite_acc= 67%  (3/3, 2.7s)  f1=100%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.0s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.4s)  f1=0%
+  battery_storage  json=True  recall= 33%  precision=100%  cite_acc=100%  (1/3, 1.7s)  f1=50%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [quote] t0.7-tk40-tp0.85-rp1.0-pp0.5-s1 rep=0 ===
+  energy           json=True  recall= 33%  precision= 50%  cite_acc=100%  (1/3, 2.7s)  quote_match=100%  f1=40%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 4.2s)  quote_match=100%  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.9s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.8s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 3.6s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [quote] t0.7-tk40-tp0.85-rp1.0-pp0.5-s1 rep=1 ===
+  energy           json=True  recall=  0%  precision=  0%  cite_acc=  0%  (0/3, 1.6s)  quote_match=100%  f1=0%
+  ai_inference     json=True  recall= 33%  precision=100%  cite_acc=100%  (1/3, 2.1s)  quote_match=100%  f1=50%
+  health           json=True  recall= 50%  precision=100%  cite_acc=100%  (1/2, 2.1s)  quote_match=100%  f1=67%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.9s)  f1=0%
+  battery_storage  json=True  recall= 33%  precision=100%  cite_acc=100%  (1/3, 2.5s)  quote_match=100%  f1=50%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [quote] t0.7-tk40-tp0.85-rp1.0-pp0.5-s1 rep=2 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 6.4s)  quote_match=100%  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 6.1s)  quote_match=100%  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 4.0s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.0s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 5.6s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [quote] t0.7-tk40-tp0.85-rp1.0-pp0.5-s1 rep=3 ===
+  energy           json=True  recall= 67%  precision= 67%  cite_acc=100%  (2/3, 4.6s)  quote_match=100%  f1=67%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 5.1s)  quote_match=100%  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 3.0s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.9s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 4.3s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [quote] t0.7-tk40-tp0.85-rp1.0-pp0.5-s1 rep=4 ===
+  energy           json=True  recall=  0%  precision=  0%  cite_acc=  0%  (0/3, 1.8s)  quote_match=100%  f1=0%
+  ai_inference     json=True  recall= 33%  precision=100%  cite_acc=100%  (1/3, 2.1s)  quote_match=100%  f1=50%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 3.1s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 3.0s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 4.3s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.5-s0 rep=0 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 4.1s)  f1=75%
+  ai_inference     json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/3, 2.3s)
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.3s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.7s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 2.6s)  f1=100%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.5-s0 rep=1 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.5s)  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 3.4s)  f1=86%
+  health           json=True  recall=  0%  precision=  0%  cite_acc=  0%  (0/2, 1.8s)  f1=0%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.9s)  f1=0%
+  battery_storage  json=True  recall=  0%  precision=  0%  cite_acc=  0%  (0/3, 1.6s)  f1=0%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.5-s0 rep=2 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.9s)  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 3.3s)  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.2s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.7s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 2.8s)  f1=100%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.5-s0 rep=3 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.9s)  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc= 67%  (3/3, 3.0s)  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.3s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.4s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 2.6s)  f1=100%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.5-s0 rep=4 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.6s)  f1=75%
+  ai_inference     json=True  recall=100%  precision=100%  cite_acc= 67%  (3/3, 2.7s)  f1=100%
+  health           json=True  recall=100%  precision=100%  cite_acc= 50%  (2/2, 2.0s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.4s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.2s)  f1=80%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.5-s0 rep=0 ===
+  energy           json=True  recall= 33%  precision= 50%  cite_acc=100%  (1/3, 2.8s)  quote_match=100%  f1=40%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 4.3s)  quote_match=100%  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.9s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 3.0s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 3.5s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.5-s0 rep=1 ===
+  energy           json=True  recall=  0%  precision=  0%  cite_acc=  0%  (0/3, 1.9s)  f1=0%
+  ai_inference     json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/3, 2.0s)
+  health           json=True  recall=  0%  precision=  0%  cite_acc=  0%  (0/2, 2.1s)  f1=0%
+  no_citations     json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.6s)
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 4.1s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.5-s0 rep=2 ===
+  energy           json=True  recall= 67%  precision= 67%  cite_acc=100%  (2/3, 3.3s)  quote_match=100%  f1=67%
+  ai_inference     json=True  recall= 67%  precision= 67%  cite_acc=100%  (2/3, 3.2s)  quote_match=100%  f1=67%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.9s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.6s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 3.6s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.5-s0 rep=3 ===
+  energy           json=True  recall= 67%  precision= 67%  cite_acc=100%  (2/3, 3.4s)  quote_match=100%  f1=67%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 4.3s)  quote_match=100%  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.9s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 3.1s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 4.1s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-1.7B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.5-s0 rep=4 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 5.1s)  quote_match=100%  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc= 33%  (3/3, 3.1s)  quote_match=25%  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.9s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.6s)  f1=0%
+  battery_storage  json=True  recall= 33%  precision=100%  cite_acc=100%  (1/3, 2.3s)  quote_match=100%  f1=50%
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [direct] t0.0-tk20-tp0.9-rp1.0-pp0.0-s1 rep=0 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc= 67%  (3/3, 3.4s)  f1=75%
+  ai_inference     json=True  recall=100%  precision=100%  cite_acc= 67%  (3/3, 2.5s)  f1=100%
+  health           json=True  recall= 50%  precision=100%  cite_acc=100%  (1/2, 1.5s)  f1=67%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.4s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 1.9s)  f1=80%
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [direct] t0.0-tk20-tp0.9-rp1.0-pp0.0-s1 rep=1 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc= 67%  (3/3, 3.2s)  f1=75%
+  ai_inference     json=True  recall=100%  precision=100%  cite_acc= 67%  (3/3, 2.6s)  f1=100%
+  health           json=True  recall= 50%  precision=100%  cite_acc=100%  (1/2, 1.8s)  f1=67%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.5s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.1s)  f1=80%
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [direct] t0.0-tk20-tp0.9-rp1.0-pp0.0-s1 rep=2 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc= 67%  (3/3, 3.4s)  f1=75%
+  ai_inference     json=True  recall=100%  precision=100%  cite_acc= 67%  (3/3, 2.6s)  f1=100%
+  health           json=True  recall= 50%  precision=100%  cite_acc=100%  (1/2, 1.7s)  f1=67%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.7s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.0s)  f1=80%
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [direct] t0.0-tk20-tp0.9-rp1.0-pp0.0-s1 rep=3 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc= 67%  (3/3, 3.5s)  f1=75%
+  ai_inference     json=True  recall=100%  precision=100%  cite_acc= 67%  (3/3, 2.9s)  f1=100%
+  health           json=True  recall= 50%  precision=100%  cite_acc=100%  (1/2, 1.7s)  f1=67%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.5s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.0s)  f1=80%
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [direct] t0.0-tk20-tp0.9-rp1.0-pp0.0-s1 rep=4 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc= 67%  (3/3, 3.5s)  f1=75%
+  ai_inference     json=True  recall=100%  precision=100%  cite_acc= 67%  (3/3, 2.8s)  f1=100%
+  health           json=True  recall= 50%  precision=100%  cite_acc=100%  (1/2, 1.5s)  f1=67%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.3s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.0s)  f1=80%
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [quote] t0.0-tk20-tp0.9-rp1.0-pp0.0-s1 rep=0 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 4.7s)  quote_match=100%  f1=75%
+  ai_inference     json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.8s)  quote_match=100%  f1=80%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.8s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.7s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 4.3s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [quote] t0.0-tk20-tp0.9-rp1.0-pp0.0-s1 rep=1 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 4.6s)  quote_match=100%  f1=75%
+  ai_inference     json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.6s)  quote_match=100%  f1=80%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.7s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.6s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 3.9s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [quote] t0.0-tk20-tp0.9-rp1.0-pp0.0-s1 rep=2 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 4.6s)  quote_match=100%  f1=75%
+  ai_inference     json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.7s)  quote_match=100%  f1=80%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.7s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.5s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 3.9s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [quote] t0.0-tk20-tp0.9-rp1.0-pp0.0-s1 rep=3 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 4.5s)  quote_match=100%  f1=75%
+  ai_inference     json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.6s)  quote_match=100%  f1=80%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.7s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.6s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 3.9s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [quote] t0.0-tk20-tp0.9-rp1.0-pp0.0-s1 rep=4 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 4.6s)  quote_match=100%  f1=75%
+  ai_inference     json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.7s)  quote_match=100%  f1=80%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.6s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.6s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 3.9s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.0-s1 rep=0 ===
+  energy           json=True  recall=  0%  precision=  0%  cite_acc=  0%  (0/3, 1.5s)  f1=0%
+  ai_inference     json=True  recall= 33%  precision=100%  cite_acc=100%  (1/3, 1.7s)  f1=50%
+  health           json=True  recall=100%  precision=100%  cite_acc= 50%  (2/2, 1.9s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.3s)  f1=0%
+  battery_storage  json=True  recall= 33%  precision=100%  cite_acc=100%  (1/3, 1.6s)  f1=50%
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.0-s1 rep=1 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.0s)  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=  0%  (3/3, 2.5s)  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.0s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.6s)  f1=0%
+  battery_storage  json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 2.9s)  f1=75%
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.0-s1 rep=2 ===
+  energy           json=True  recall=  0%  precision=  0%  cite_acc=  0%  (0/3, 1.4s)  f1=0%
+  ai_inference     json=True  recall= 33%  precision=100%  cite_acc=100%  (1/3, 1.6s)  f1=50%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 1.8s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.3s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.0s)  f1=80%
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.0-s1 rep=3 ===
+  energy           json=True  recall=  0%  precision=  0%  cite_acc=  0%  (0/3, 1.4s)  f1=0%
+  ai_inference     json=True  recall= 33%  precision=100%  cite_acc=100%  (1/3, 1.6s)  f1=50%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.0s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.3s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 1.9s)  f1=80%
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.0-s1 rep=4 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc= 67%  (3/3, 3.1s)  f1=75%
+  ai_inference     json=True  recall=100%  precision=100%  cite_acc= 67%  (3/3, 2.5s)  f1=100%
+  health           json=True  recall= 50%  precision=100%  cite_acc=100%  (1/2, 1.7s)  f1=67%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.2s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.0s)  f1=80%
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.0-s1 rep=0 ===
+  energy           json=True  recall=  0%  precision=  0%  cite_acc=  0%  (0/3, 1.6s)  quote_match=100%  f1=0%
+  ai_inference     json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.6s)  quote_match=100%  f1=80%
+  health           json=True  recall= 50%  precision=100%  cite_acc=100%  (1/2, 2.1s)  quote_match=100%  f1=67%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.6s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 4.2s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.0-s1 rep=1 ===
+  energy           json=True  recall= 67%  precision= 50%  cite_acc=100%  (2/3, 4.1s)  quote_match=100%  f1=57%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc= 33%  (3/3, 2.8s)  quote_match=25%  f1=86%
+  health           json=True  recall= 50%  precision=100%  cite_acc=100%  (1/2, 2.0s)  quote_match=100%  f1=67%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.7s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 4.0s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.0-s1 rep=2 ===
+  energy           json=True  recall=  0%  precision=  0%  cite_acc=  0%  (0/3, 1.6s)  quote_match=100%  f1=0%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 4.0s)  quote_match=100%  f1=86%
+  health           json=True  recall= 50%  precision=100%  cite_acc=100%  (1/2, 2.0s)  quote_match=100%  f1=67%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.6s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 3.7s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.0-s1 rep=3 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 4.6s)  quote_match=100%  f1=75%
+  ai_inference     json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.7s)  quote_match=100%  f1=80%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.7s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.6s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 3.9s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.0-s1 rep=4 ===
+  energy           json=True  recall=  0%  precision=  0%  cite_acc=  0%  (0/3, 1.6s)  quote_match=100%  f1=0%
+  ai_inference     json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.7s)  quote_match=100%  f1=80%
+  health           json=True  recall=100%  precision= 67%  cite_acc=100%  (2/2, 3.5s)  quote_match=100%  f1=80%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.6s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 3.9s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.0-s0 rep=0 ===
+  energy           json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/3, 3.2s)
+  ai_inference     json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/3, 1.6s)
+  health           json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/2, 1.6s)
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.4s)  f1=0%
+  battery_storage  json=True  recall=  0%  precision=  0%  cite_acc=  0%  (0/3, 1.6s)  f1=0%
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.0-s0 rep=1 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.0s)  f1=75%
+  ai_inference     json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/3, 1.6s)
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 1.9s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.3s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 2.6s)  f1=100%
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.0-s0 rep=2 ===
+  energy           json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/3, 3.2s)
+  ai_inference     json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/3, 1.6s)
+  health           json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/2, 1.6s)
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.4s)  f1=0%
+  battery_storage  json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/3, 2.3s)
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.0-s0 rep=3 ===
+  energy           json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/3, 3.2s)
+  ai_inference     json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/3, 1.6s)
+  health           json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/2, 1.6s)
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.3s)  f1=0%
+  battery_storage  json=True  recall=  0%  precision=  0%  cite_acc=  0%  (0/3, 1.6s)  f1=0%
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.0-s0 rep=4 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.5s)  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 3.2s)  f1=86%
+  health           json=True  recall= 50%  precision=100%  cite_acc=100%  (1/2, 1.5s)  f1=67%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.4s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 2.7s)  f1=100%
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.0-s0 rep=0 ===
+  energy           json=True  recall= 67%  precision= 67%  cite_acc=100%  (2/3, 3.4s)  quote_match=100%  f1=67%
+  ai_inference     json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.6s)  quote_match=100%  f1=80%
+  health           json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/2, 6.1s)
+  no_citations     json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 6.0s)
+  battery_storage  json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/3, 3.8s)
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.0-s0 rep=1 ===
+  energy           json=True  recall=  0%  precision=  0%  cite_acc=  0%  (0/3, 1.7s)  quote_match=100%  f1=0%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 4.0s)  quote_match=100%  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.9s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=100%  precision=  0%  cite_acc= n/a  (0/0, 1.1s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 4.2s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.0-s0 rep=2 ===
+  energy           json=True  recall=  0%  precision=  0%  cite_acc=  0%  (0/3, 1.6s)  quote_match=100%  f1=0%
+  ai_inference     json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/3, 6.2s)
+  health           json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/2, 6.1s)
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.6s)  f1=0%
+  battery_storage  json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/3, 6.2s)
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.0-s0 rep=3 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 4.9s)  quote_match=100%  f1=75%
+  ai_inference     json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/3, 3.7s)
+  health           json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/2, 4.1s)
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.9s)  f1=0%
+  battery_storage  json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/3, 6.1s)
+
+=== prism-ml/Bonsai-4B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.0-s0 rep=4 ===
+  energy           json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/3, 6.2s)
+  ai_inference     json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 3.6s)  quote_match=100%  f1=100%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.7s)  quote_match=100%  f1=100%
+  no_citations     json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.7s)
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 4.1s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [direct] t0.0-tk20-tp0.9-rp1.0-pp0.0-s1 rep=0 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.4s)  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc= 67%  (3/3, 3.0s)  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.1s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.4s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 2.5s)  f1=100%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [direct] t0.0-tk20-tp0.9-rp1.0-pp0.0-s1 rep=1 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.3s)  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc= 67%  (3/3, 2.9s)  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.2s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.4s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 2.6s)  f1=100%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [direct] t0.0-tk20-tp0.9-rp1.0-pp0.0-s1 rep=2 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.5s)  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc= 67%  (3/3, 3.0s)  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.3s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.4s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 2.6s)  f1=100%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [direct] t0.0-tk20-tp0.9-rp1.0-pp0.0-s1 rep=3 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.6s)  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc= 67%  (3/3, 3.1s)  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.1s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.4s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 2.7s)  f1=100%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [direct] t0.0-tk20-tp0.9-rp1.0-pp0.0-s1 rep=4 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.5s)  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc= 67%  (3/3, 2.8s)  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.0s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.2s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 2.4s)  f1=100%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [quote] t0.0-tk20-tp0.9-rp1.0-pp0.0-s1 rep=0 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 4.9s)  quote_match=100%  f1=75%
+  ai_inference     json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 3.6s)  quote_match=100%  f1=100%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.9s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 3.0s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.8s)  quote_match=100%  f1=80%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [quote] t0.0-tk20-tp0.9-rp1.0-pp0.0-s1 rep=1 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 5.0s)  quote_match=100%  f1=75%
+  ai_inference     json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 3.7s)  quote_match=100%  f1=100%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 3.0s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 3.0s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.9s)  quote_match=100%  f1=80%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [quote] t0.0-tk20-tp0.9-rp1.0-pp0.0-s1 rep=2 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 5.0s)  quote_match=100%  f1=75%
+  ai_inference     json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 4.0s)  quote_match=100%  f1=100%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.9s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 3.0s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.8s)  quote_match=100%  f1=80%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [quote] t0.0-tk20-tp0.9-rp1.0-pp0.0-s1 rep=3 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 5.0s)  quote_match=100%  f1=75%
+  ai_inference     json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 3.7s)  quote_match=100%  f1=100%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.9s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 3.0s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.9s)  quote_match=100%  f1=80%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [quote] t0.0-tk20-tp0.9-rp1.0-pp0.0-s1 rep=4 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 5.4s)  quote_match=100%  f1=75%
+  ai_inference     json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 4.1s)  quote_match=100%  f1=100%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 3.2s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 3.2s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 3.0s)  quote_match=100%  f1=80%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.0-s1 rep=0 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.7s)  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc= 67%  (3/3, 3.1s)  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.4s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.4s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.1s)  f1=80%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.0-s1 rep=1 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.3s)  f1=75%
+  ai_inference     json=True  recall=100%  precision=100%  cite_acc= 67%  (3/3, 2.7s)  f1=100%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.0s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.3s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.1s)  f1=80%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.0-s1 rep=2 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.7s)  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 3.3s)  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.3s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.5s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 2.6s)  f1=100%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.0-s1 rep=3 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.7s)  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc= 67%  (3/3, 3.1s)  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.1s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.3s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 2.7s)  f1=100%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.0-s1 rep=4 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.6s)  f1=75%
+  ai_inference     json=True  recall=100%  precision=100%  cite_acc= 67%  (3/3, 2.7s)  f1=100%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.1s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.4s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.1s)  f1=80%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.0-s1 rep=0 ===
+  energy           json=True  recall= 33%  precision= 50%  cite_acc=100%  (1/3, 2.7s)  quote_match=100%  f1=40%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 4.7s)  quote_match=100%  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.9s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.9s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 4.5s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.0-s1 rep=1 ===
+  energy           json=True  recall= 67%  precision= 50%  cite_acc=100%  (2/3, 4.5s)  quote_match=100%  f1=57%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=  0%  (3/3, 2.7s)  quote_match=0%  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 3.0s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.9s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 3.0s)  quote_match=100%  f1=80%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.0-s1 rep=2 ===
+  energy           json=True  recall= 67%  precision= 67%  cite_acc=100%  (2/3, 3.7s)  quote_match=100%  f1=67%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 4.5s)  quote_match=100%  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 3.2s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.6s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 3.8s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.0-s1 rep=3 ===
+  energy           json=True  recall= 67%  precision= 67%  cite_acc=100%  (2/3, 3.6s)  quote_match=100%  f1=67%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 4.7s)  quote_match=100%  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.8s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.8s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 4.0s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.0-s1 rep=4 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 5.1s)  quote_match=100%  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc= 33%  (3/3, 3.1s)  quote_match=25%  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.9s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.9s)  f1=0%
+  battery_storage  json=True  recall= 33%  precision=100%  cite_acc=100%  (1/3, 2.2s)  quote_match=100%  f1=50%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.0-s0 rep=0 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 4.0s)  f1=75%
+  ai_inference     json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/3, 3.1s)
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.2s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.3s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.1s)  f1=80%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.0-s0 rep=1 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.4s)  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 3.4s)  f1=86%
+  health           json=True  recall=  0%  precision=  0%  cite_acc=  0%  (0/2, 1.8s)  f1=0%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.8s)  f1=0%
+  battery_storage  json=True  recall=  0%  precision=  0%  cite_acc=  0%  (0/3, 1.6s)  f1=0%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.0-s0 rep=2 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 4.0s)  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 3.4s)  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.1s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.5s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 2.4s)  f1=100%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.0-s0 rep=3 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.9s)  f1=75%
+  ai_inference     json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/3, 3.3s)
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.2s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.3s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 2.6s)  f1=100%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [direct] t0.5-tk20-tp0.9-rp1.0-pp0.0-s0 rep=4 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 3.4s)  f1=75%
+  ai_inference     json=True  recall=100%  precision=100%  cite_acc= 67%  (3/3, 2.7s)  f1=100%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.0s)  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.4s)  f1=0%
+  battery_storage  json=True  recall= 67%  precision=100%  cite_acc=100%  (2/3, 2.0s)  f1=80%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.0-s0 rep=0 ===
+  energy           json=True  recall= 33%  precision= 50%  cite_acc=100%  (1/3, 2.8s)  quote_match=100%  f1=40%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 4.4s)  quote_match=100%  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.8s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.9s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 4.5s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.0-s0 rep=1 ===
+  energy           json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/3, 1.7s)
+  ai_inference     json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/3, 2.1s)
+  health           json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/2, 2.2s)
+  no_citations     json=False recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.6s)
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 3.7s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.0-s0 rep=2 ===
+  energy           json=True  recall= 67%  precision= 67%  cite_acc=100%  (2/3, 3.4s)  quote_match=100%  f1=67%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 4.3s)  quote_match=100%  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 3.1s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.7s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 3.7s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.0-s0 rep=3 ===
+  energy           json=True  recall= 67%  precision= 67%  cite_acc=100%  (2/3, 3.6s)  quote_match=100%  f1=67%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc=100%  (3/3, 4.3s)  quote_match=100%  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.8s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 2.8s)  f1=0%
+  battery_storage  json=True  recall=100%  precision=100%  cite_acc=100%  (3/3, 3.9s)  quote_match=100%  f1=100%
+
+=== prism-ml/Bonsai-8B-gguf:Q1_0 [quote] t0.5-tk20-tp0.9-rp1.0-pp0.0-s0 rep=4 ===
+  energy           json=True  recall=100%  precision= 60%  cite_acc=100%  (3/3, 5.0s)  quote_match=100%  f1=75%
+  ai_inference     json=True  recall=100%  precision= 75%  cite_acc= 33%  (3/3, 3.1s)  quote_match=25%  f1=86%
+  health           json=True  recall=100%  precision=100%  cite_acc=100%  (2/2, 2.9s)  quote_match=100%  f1=100%
+  no_citations     json=True  recall=  0%  precision=  0%  cite_acc= n/a  (0/0, 1.7s)  f1=0%
+  battery_storage  json=True  recall= 33%  precision=100%  cite_acc=100%  (1/3, 2.3s)  quote_match=100%  f1=50%
+replay: 20 files, 500 records, 500 scored verified, 0 timeout checked
+=== Grid run finished Mon Jul 20 21:23:20 CEST 2026 exit=0 ===
