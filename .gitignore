@@ -3,3 +3,12 @@ models/
 __pycache__/
 *.pyc
 .claude/settings.local.json
+
+# Run artifacts (regenerable from a grid rerun). Track only the summary
+# reports, not the raw captures or speed-bench JSON.
+reports/captures/
+results/
+
+# Transient smoke scratch dirs.
+.smoke-tmp/
+run-grid.sh
